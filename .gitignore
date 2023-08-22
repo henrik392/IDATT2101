@@ -1,0 +1,42 @@
+# Compiled object files
+*.o
+*.so
+*.ko
+*.obj
+*.elf
+*.out
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.dylib
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Executables
+*.exe
+*.out
+*.app
+*.dll
+
+# Debug files
+*.dSYM/
+
+# MacOS files
+.DS_Store
+
+# Visual Studio Code files
+.vscode/
+
+# Other binary files
+*.[Bb]in
+
+# Input and output files
+input.txt
+output.txt
