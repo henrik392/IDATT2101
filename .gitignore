@@ -40,3 +40,8 @@
 # Input and output files
 input.txt
 output.txt
+
+# Zips
+*.zip
+*.rar
+*.gz
