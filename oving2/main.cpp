@@ -5,7 +5,10 @@ using namespace std;
 
 int multMetode1(int n, int x);
 int multMetode2(int n, int x);
-void tidtaking(int (*funksjon)(int, int), int n, int x);
+
+typedef int (*mult_method)(int, int);
+
+void tidtaking(mult_method method, int n, int x);
 
 int main() {
     cout << "Oving 2" << endl;
@@ -53,7 +56,7 @@ int multMetode2(int n, int x) {
     return multMetode2(n / 2, x + x);
 }
 
-void tidtaking(int (*funksjon)(int, int), int n, int x) {
+void tidtaking(mult_method method, int n, int x) {
     int runder = 0;
     int verdi;
 
@@ -61,7 +64,7 @@ void tidtaking(int (*funksjon)(int, int), int n, int x) {
     auto finish = chrono::high_resolution_clock::now();
 
     do {
-        verdi = funksjon(n, x);
+        verdi = method(n, x);
         finish = chrono::high_resolution_clock::now();
         runder++;
     } while (chrono::duration_cast<chrono::duration<double>>(finish - start).count() < 1.0);

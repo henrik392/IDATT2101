@@ -1,9 +1,9 @@
-# Øving 1: Algoritmer og Datastrukturer
+# Øving 2: Algoritmer og Datastrukturer
 
 ## Innhold
 
 - [Oppgavebeskrivelse](#oppgavebeskrivelse)
-- [Algoritme](#algoritme)
+- [Algoritmen](#algoritmen)
 - [Tidskompleksitet](#tidskompleksitet)
 - [Tidsmålinger](#tidsmålinger)
 - [Konklusjon](#konklusjon)
