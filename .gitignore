@@ -48,3 +48,12 @@ output.txt
 
 *.html
 
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+

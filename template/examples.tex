@@ -1,0 +1,47 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[norsk]{babel}
+\usepackage{amsmath, amssymb, amsthm}  % For matematisk notasjon
+\usepackage{algorithm, algorithmic}    % For å skrive algoritmer
+\usepackage{graphicx}                  % For å inkludere bilder
+\usepackage{hyperref}                  % For hyperlenker
+\usepackage{pgfplots}                  % For grafer
+\pgfplotsset{compat=1.16}
+
+\title{Oving n - Algoritmer og Datastrukturer}
+\author{Henrik Halvorsen Kvamme}
+\date{\today}
+
+\newtheorem{theorem}{Teorem}
+\newtheorem{definition}{Definisjon}
+\newtheorem{example}{Eksempel}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduksjon}
+Her kommer introduksjonen din.
+
+\section{Algoritmer}
+\subsection{Eksempelalgoritme}
+\begin{algorithm}
+\caption{Eksempel på en algoritme}
+\begin{algorithmic}
+\STATE \( n \gets \text{input}() \)
+\IF{ \( n < 0 \) }
+\STATE \( \text{print}(``Negative tall'') \)
+\ELSE
+\STATE \( \text{print}(``Ikke-negative tall'') \)
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\section{Resultater}
+\subsection{Grafisk fremstilling}
+% Inkluder grafer her, laget med pgfplots eller en annen pakke
+
+\section{Konklusjon}
+Her kommer konklusjonen din.
+
+\end{document}
