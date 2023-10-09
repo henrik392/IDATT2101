@@ -56,4 +56,6 @@ output.txt
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+*.toc
 
+oving6/data
