@@ -1,0 +1,87 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[norsk]{babel}
+\usepackage{amsmath, amssymb, amsthm}  % For matematisk notasjon
+\usepackage{algorithm, algorithmic}    % For å skrive algoritmer
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{graphicx}                  % For å inkludere bilder
+\usepackage{hyperref}                  % For hyperlenker
+\usepackage{pgfplots}                  % For grafer
+\pgfplotsset{compat=1.16}
+\hypersetup{
+    colorlinks=false,
+    pdfborder={0 0 0},
+    }
+
+
+\title{Øving n - Algoritmer og datastrukturer}
+\author{Henrik Halvorsen Kvamme}
+\date{\today}
+
+\begin{document}
+
+\begin{center}
+    \includegraphics[width=0.5\textwidth]{../images/NTNU_Logo.png}
+    
+    \vspace{1.5em}  % Optional vertical space
+    
+    {\LARGE \textbf{Øving 7} \\[0.5em] \text{Algoritmer og Datastrukturer}}  % Title
+    \vspace{1em}  % Optional vertical space
+    
+    {\large Henrik Halvorsen Kvamme}\\  % Author name
+    \vspace{0.5em}  % Optional vertical space
+    
+    {\today}  % Date
+\end{center}
+
+\vspace{2em}
+
+\tableofcontents
+
+\newpage
+
+\section{Introduksjon}
+Oppgaven handler om vektede grafer og å implementere Edmonds-Karp-algoritmen for å finne maksimal flyt. I en slik graf er hver kant gitt en viss kapasitet, som er det maksimale antallet enheter som kan ``flyte'' gjennom den kanten. Målet er å finne den maksimale mengden flyt som kan gå fra en kilde til en sluk i nettverket.
+
+\section{Teori}
+Edmonds-Karp-algoritmen er en spesifikk implementering av Ford-Fulkerson metoden for å beregne maksimal flyt i en flytnettverk.
+Den bruker BFS (Breadth First Search) for å finne den korteste stien i restnettverket.
+
+Hovedideen bak Edmonds-Karp er:
+\begin{enumerate}
+    \item \textbf{Start med null flyt.}
+    \item Mens det finnes en sti fra kilden til slu\-ket i restnettverket (bruk BFS for dette):
+    \begin{enumerate}[label=\alph*)]
+        \item \textbf{Finn minimum kapasitet} over den stien - dette vil være flaskehalsen.
+        \item \textbf{Send flyt} langs denne stien.
+        \item \textbf{Oppdater restnettverket} med den nye flyten.
+    \end{enumerate}
+    \item Når det ikke finnes flere stier i restnettverket, stopp. Den nåværende \textbf{flyten er maksimal}.
+\end{enumerate}
+
+\section{Resultater}
+Etter å ha brukt Edmond-Karp for alle grafene fikk jeg resultatet:
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lccc}
+        \toprule
+        & \textbf{k} & \textbf{s} & \textbf{maks flyt} \\
+        \midrule
+        flytgraf1 & 0 & 7 & 10 \\
+        flytgraf2 & 0 & 1 & 27 \\
+        flytgraf3 & 0 & 1 & 42 \\
+        flytgraf4 & 0 & 7 & 11 \\
+        flytgraf5 & 0 & 7 & 90 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Tabell representasjon av resultat fra main.cpp.}
+    \label{tab:my_table}
+\end{table}
+
+\section{Konklusjon}
+Jeg valgte å gjøre som forrige oppgave med å implementere en klasse grafene. Den tar inn filnavn og bruker så fstream for å lese data. Klassen har en metode for å finne maks flyt, som bruker Edmonds-Karp algoritmen.
+
+Kildekoden ligger vedlagt i main.cpp. Main funksjonen kjører flere tester for å vise at den utfører oppgaven.
+
+\end{document}
