@@ -2,11 +2,13 @@
 
 ## Innhold
 
-- [Oppgavebeskrivelse](#oppgavebeskrivelse)
-- [Algoritmen](#algoritmen)
-- [Tidskompleksitet](#tidskompleksitet)
-- [Tidsmålinger](#tidsmålinger)
-- [Konklusjon](#konklusjon)
+- [Øving 2: Algoritmer og Datastrukturer](#øving-2-algoritmer-og-datastrukturer)
+  - [Innhold](#innhold)
+  - [Oppgavebeskrivelse](#oppgavebeskrivelse)
+  - [Algoritmen](#algoritmen)
+  - [Tidskompleksitet](#tidskompleksitet)
+  - [Tidsmålinger](#tidsmålinger)
+  - [Konklusjon](#konklusjon)
 
 ---
 

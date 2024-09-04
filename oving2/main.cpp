@@ -3,17 +3,22 @@
 
 using namespace std;
 
-int multMetode1(int n, int x);
-int multMetode2(int n, int x);
+void testMethods();
 
-typedef int (*mult_method)(int, int);
+double eksponentMetode1(double x, int n);
+double eksponentMetode2(double x, int n);
+double eksponentMetode3(double x, int n);
 
-void tidtaking(mult_method method, int n, int x);
+typedef double (*eksponent_method)(double, int);
+
+void tidtaking(eksponent_method method, double x, int n);
 
 int main() {
-    cout << "Oving 2" << endl;
+    cout << "Oving 2\n\n";
+    testMethods();
+
     int n_arr[] = {100, 1000, 10000, 100000};
-    int x = 7;
+    double x = 1.002;
 
     cout << "x = " << x << endl
          << endl;
@@ -22,14 +27,18 @@ int main() {
         cout << "n = " << n << endl;
 
         cout << "Metode 1: " << endl;
-        tidtaking(multMetode1, n, x);
+        tidtaking(eksponentMetode1, x, n);
         cout << endl;
 
         cout << "Metode 2: " << endl;
-        tidtaking(multMetode2, n, x);
+        tidtaking(eksponentMetode2, x, n);
         cout << endl;
 
-        cout << "Kontroll: " << n * x << endl
+        cout << "Metode 3: " << endl;
+        tidtaking(eksponentMetode3, x, n);
+        cout << endl;
+
+        cout << "Kontroll: " << pow(x, n) << endl
              << endl;
 
         cout << "----------------------------------------" << endl
@@ -39,32 +48,61 @@ int main() {
     return 0;
 }
 
-int multMetode1(int n, int x) {
+void verifyMethod(eksponent_method method, string methodName, double x, int n, double ans) {
+    double res = method(x, n);
+    printf("%s(%f, %d) = %f is ", methodName.c_str(), x, n, res);
+    if (res == ans) {
+        cout << "Correct" << endl;
+    } else {
+        cout << "Incorrect" << endl;
+    }
+}
+
+void testMethods() {
+    cout << "Verifying methods:" << endl;
+    double x = 5.0;
+    int n = 11;
+    double ans = 48828125;
+    printf("%f^%d = %f\n", x, n, ans);
+
+    verifyMethod(eksponentMetode1, "eksponentMetode1", x, n, ans);
+    verifyMethod(eksponentMetode2, "eksponentMetode2", x, n, ans);
+    verifyMethod(eksponentMetode3, "eksponentMetode3", x, n, ans);
+
+    cout << "----------------------------------------" << endl
+         << endl;
+}
+
+double eksponentMetode1(double x, int n) {
     if (n == 1)
         return x;
 
-    return multMetode1(n - 1, x) + x;
+    return x * eksponentMetode1(x, n - 1);
 }
 
-int multMetode2(int n, int x) {
+double eksponentMetode2(double x, int n) {
     if (n == 1)
         return x;
 
     if (n & 1)
-        return multMetode2(n / 2, x + x) + x;
+        return x * eksponentMetode2(x * x, (n - 1) / 2);
 
-    return multMetode2(n / 2, x + x);
+    return eksponentMetode2(x * x, n / 2);
 }
 
-void tidtaking(mult_method method, int n, int x) {
+double eksponentMetode3(double x, int n) {
+    return pow(x, n);
+}
+
+void tidtaking(eksponent_method method, double x, int n) {
     int runder = 0;
-    int verdi;
+    double verdi;
 
     auto start = chrono::high_resolution_clock::now();
     auto finish = chrono::high_resolution_clock::now();
 
     do {
-        verdi = method(n, x);
+        verdi = method(x, n);
         finish = chrono::high_resolution_clock::now();
         runder++;
     } while (chrono::duration_cast<chrono::duration<double>>(finish - start).count() < 1.0);
