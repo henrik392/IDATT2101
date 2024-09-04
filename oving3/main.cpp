@@ -8,40 +8,27 @@
 using namespace std;
 
 using sort_function = void (*)(vector<int> &, int, int);
+using sort_function_dual = void (*)(vector<int> &, int, int);
 
-void runThresholdTestsOnAlgorithm(sort_function sortFunction, int n);
+void runThresholdTestsOnAlgorithm(string algorithmName, sort_function sortFunction, int n);
 
-void quickSortMedian(vector<int> &vec, int low, int high);
-void quickSort3Way(vector<int> &vec, int low, int high);
-void quickSort3WayBubbleHelper(vector<int> &vec, int low, int high);
-void quickSort3WayInsertionHelper(vector<int> &vec, int low, int high);
+void quickSort(vector<int> &vec, int low, int high);
+void quickSortDualPivot(vector<int> &vec, int low, int high);
+void quickSortInsertionHelper(vector<int> &vec, int low, int high);
 
-int threshold = 10;
+const int THRESHOLD = 10;
 
 int main() {
     srand(time(NULL));
 
-    // vector<int> N = {100, 1000, 10000, 100000, 1000000};
-    static int n = 1000000;
+    const int N = 50;
 
     cout << "Oving 3" << endl
          << endl;
 
-    // runThresholdTestsOnAlgorithm(quickSortMedian, n);
-
-    // cout << endl;
-
-    // runThresholdTestsOnAlgorithm(quickSort3Way, n);
-
-    cout << "\n\nbubbleThreshold = " << threshold << " for bobblesortering:" << endl
-         << endl;
-
-    runThresholdTestsOnAlgorithm(quickSort3WayBubbleHelper, n);
-
-    cout << "\ninsertionThreshold = " << threshold << " for insettingssortering:" << endl
-         << endl;
-
-    runThresholdTestsOnAlgorithm(quickSort3WayInsertionHelper, n);
+    runThresholdTestsOnAlgorithm("Quick Sort", quickSort, N);
+    runThresholdTestsOnAlgorithm("Quick Sort med dual pivot", quickSortDualPivot, N);
+    runThresholdTestsOnAlgorithm("Quick Sort med dual pivot og InsertionHelper", quickSortInsertionHelper, N);
 
     return 0;
 }
@@ -68,6 +55,8 @@ SortTest generateRandomSortTest(int n) {
 }
 
 SortTest generateDupeSortTest(int n) {
+    // Annenhvert tall er 42
+
     vector<int> vec(n);
 
     int range = 10000;
@@ -89,6 +78,8 @@ SortTest generateDupeSortTest(int n) {
 }
 
 SortTest generateSortedSortTest(int n) {
+    // Sortert liste fra -n/2 til n/2
+
     vector<int> vec(n);
 
     int sum = 0;
@@ -100,12 +91,27 @@ SortTest generateSortedSortTest(int n) {
     return SortTest(vec, sum);
 }
 
+SortTest generateReverseSortTest(int n) {
+    // Sortert liste fra n/2 til -n/2
+
+    vector<int> vec(n);
+
+    int sum = 0;
+    for (int i = 0; i < n; i++) {
+        vec[i] = n / 2 - i;
+        sum += vec[i];
+    }
+
+    return SortTest(vec, sum);
+}
+
 bool isSorted(SortTest sortTest) {
     vector<int> &vec = sortTest.data;
     int sum = 0;
     for (size_t i = 0; i < vec.size(); i++) {
-        if (i < vec.size() - 1 && vec[i] > vec[i + 1])
+        if (i < vec.size() - 1 && vec[i] > vec[i + 1]) {
             return false;
+        }
 
         sum += vec[i];
     }
@@ -113,8 +119,8 @@ bool isSorted(SortTest sortTest) {
     return sum == sortTest.checkSum;
 }
 
-int medianOfThree(vector<int> &vec, int low, int high) {
-    int mid = low + (high - low) / 2;
+int median3sort(vector<int> &vec, int low, int high) {
+    int mid = (low + high) / 2;
     if (vec[low] > vec[high])
         swap(vec[low], vec[high]);
     if (vec[low] > vec[mid])
@@ -126,55 +132,160 @@ int medianOfThree(vector<int> &vec, int low, int high) {
 }
 
 int partition(vector<int> &vec, int low, int high) {
-    int pivotIndex = medianOfThree(vec, low, high);
-    swap(vec[pivotIndex], vec[high]);
-    int pivot = vec[high];
+    // cout << low << " " << high << endl;
+    int pivotIndex = median3sort(vec, low, high);
+    int pivotValue = vec[pivotIndex];
+    swap(vec[pivotIndex], vec[high - 1]);
 
-    int i = low;
-    for (int j = low; j <= high - 1; j++) {
-        if (vec[j] < pivot) {
-            swap(vec[i], vec[j]);
-            i++;
-        }
-    }
-
-    swap(vec[i], vec[high]);
-    return i;
-}
-
-void threeWayPartition(vector<int> &vec, int low, int high, int &lt, int &gt) {
-    int pivotIndex = medianOfThree(vec, low, high);
-    swap(vec[pivotIndex], vec[high]);
-    int pivot = vec[high];
-
-    lt = low;
-    gt = high;
-    int i = low;
-
-    while (i <= gt) {
-        if (vec[i] < pivot) {
-            swap(vec[lt++], vec[i++]);
-        } else if (vec[i] > pivot) {
-            swap(vec[i], vec[gt--]);
-        } else {
-            i++;
-        }
-    }
-}
-
-void bubbleSort(vector<int> &vec, int low, int high) {
-    bool swapped;
-    for (int i = low; i <= high; i++) {
-        swapped = false;
-        for (int j = low; j < high - i + low; j++)
-            if (vec[j] > vec[j + 1]) {
-                swap(vec[j], vec[j + 1]);
-                swapped = true;
-            }
-
-        if (!swapped)
+    int iLow = low;
+    int iHigh = high - 1;
+    while (true) {
+        while (vec[++iLow] < pivotValue)
+            ;
+        while (vec[--iHigh] > pivotValue)
+            ;
+        if (iLow >= iHigh)
             break;
+
+        swap(vec[iLow], vec[iHigh]);
     }
+
+    swap(vec[iLow], vec[high - 1]);
+    return iLow;
+}
+
+void quickSort(vector<int> &vec, int low, int high) {
+    // low og high er inklusive
+
+    if (high - low <= 2) {
+        median3sort(vec, low, high);
+        return;
+    }
+
+    int partitionIndex = partition(vec, low, high);
+    quickSort(vec, low, partitionIndex - 1);
+    quickSort(vec, partitionIndex + 1, high);
+}
+
+void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
+    // cout << low << " " << high << endl;
+    if (vec[low] > vec[high])
+        swap(vec[low], vec[high]);
+
+    // Kan bruke median3sort?
+    int leftPivotIndex = low + (high - low) / 3;
+    int rightPivotIndex = high - (high - low) / 3;
+    if (vec[leftPivotIndex] > vec[rightPivotIndex])
+        swap(leftPivotIndex, rightPivotIndex);
+
+    int leftPivotValue = vec[leftPivotIndex];
+    int rightPivotValue = vec[rightPivotIndex];
+    swap(vec[leftPivotIndex], vec[high]);
+    swap(vec[rightPivotIndex], vec[low]);
+
+    int iLow = low;
+    int iHigh = high;
+    while (true) {
+        while (vec[++iLow] < leftPivotValue)
+            ;
+        while (vec[--iHigh] > leftPivotValue)
+            ;
+        if (iLow >= iHigh)
+            break;
+
+        swap(vec[iLow], vec[iHigh]);
+    }
+
+    // løkken stopper når vec[iLow] er større eller lik leftPivotValue og vec[iHigh] er mindre eller lik leftPivotValue
+    swap(vec[iLow], vec[high]);
+
+    leftPartitionIndex = iLow;
+
+    // --- Right partition ---
+    // Vi vet nå at alle elementer fra low frem til leftPartitionIndex er mindre enn leftPivotValue og alle etter er større eller lik.
+    // vec[lefPartitionIndex] er lik leftPivotValue, alt til høyre er større eller lik.
+    // Nå må vi finne right partition index, den ligger et sted mellom leftPartitionIndex og high
+
+    iLow = leftPartitionIndex;
+    iHigh = high;
+    while (true) {
+        while (vec[++iLow] < rightPivotValue)
+            ;
+        while (vec[--iHigh] > rightPivotValue)
+            ;
+        if (iLow >= iHigh)
+            break;
+
+        swap(vec[iLow], vec[iHigh]);
+    }
+
+    swap(vec[iHigh], vec[low]);
+
+    rightPartitionIndex = iHigh;
+}
+
+void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
+    if (vec[low] > vec[high])
+        swap(vec[low], vec[high]);
+
+    // Kan bruke median3sort?
+    int leftPivotIndex = low + (high - low) / 3;
+    int rightPivotIndex = high - (high - low) / 3;
+    if (vec[leftPivotIndex] > vec[rightPivotIndex])
+        swap(leftPivotIndex, rightPivotIndex);
+
+    int leftPivotValue = vec[leftPivotIndex];
+    int rightPivotValue = vec[rightPivotIndex];
+    swap(vec[leftPivotIndex], vec[high - 1]);
+    swap(vec[rightPivotIndex], vec[high]);
+
+    // Inklusiv low og high
+    int iLow = low;
+    int iHigh = high - 2;
+    while (true) {
+        while (vec[iLow] < leftPivotValue) {
+            iLow++;
+        }
+        // iLow er nå på en plass hvor vec[iLow] er lik eller større enn leftPivotValue
+        // alt under iLow er mindre enn leftPivotValue
+
+        while (vec[iHigh] >= leftPivotValue) {
+            iHigh--;
+        }
+        // iHigh er nå på en plass hvor vec[iHigh] er mindre enn leftPivotValue
+        // alt over iHigh er større eller lik leftPivotValue
+
+        if (iLow >= iHigh) {
+            break;
+        }
+
+        // Plassene til iLow og iHigh byttes om slik at alt under iLow er mindre enn leftPivotValue og alt over iHigh er større eller lik leftPivotValue
+        swap(vec[iLow], vec[iHigh]);
+    }
+
+    // Bytter med temp plassen jeg har laget i high - 1,
+    // siden iLow lander på et element som er større eller lik leftPivotValue er det greit å bytte denne ut med high - 1
+    swap(vec[iLow], vec[high - 1]);
+
+    leftPartitionIndex = iLow;
+
+    swap(vec[low], vec[iHigh])
+}
+
+void quickSortDualPivot(vector<int> &vec, int low, int high) {
+    if (high - low <= 2) {
+        median3sort(vec, low, high);
+        return;
+    }
+
+    int leftPartitionIndex = 0;
+    int rightPartitionIndex = 0;
+    partitionDualPivot(vec, low, high, leftPartitionIndex, rightPartitionIndex);
+
+    quickSortDualPivot(vec, low, leftPartitionIndex - 1);
+    if (vec[leftPartitionIndex] != vec[rightPartitionIndex])
+        quickSortDualPivot(vec, leftPartitionIndex + 1, rightPartitionIndex - 1);
+    quickSortDualPivot(vec, rightPartitionIndex + 1, high);
 }
 
 void insertionSort(vector<int> &vec, int low, int high) {
@@ -190,53 +301,26 @@ void insertionSort(vector<int> &vec, int low, int high) {
     }
 }
 
-void quickSortMedian(vector<int> &vec, int low, int high) {
-    if (low >= high)
-        return;
-
-    int pi = partition(vec, low, high);
-    quickSortMedian(vec, low, pi - 1);
-    quickSortMedian(vec, pi + 1, high);
-}
-
-void quickSort3Way(vector<int> &vec, int low, int high) {
-    if (low >= high)
-        return;
-
-    int lt, gt;
-    threeWayPartition(vec, low, high, lt, gt);
-    quickSort3Way(vec, low, lt - 1);
-    quickSort3Way(vec, gt + 1, high);
-}
-
-void quickSort3WayBubbleHelper(vector<int> &vec, int low, int high) {
-    if (low >= high)
-        return;
-
-    if (high - low <= threshold) {
-        bubbleSort(vec, low, high);
+void quickSortInsertionHelper(vector<int> &vec, int low, int high) {
+    if (high - low <= 2) {
+        median3sort(vec, low, high);
         return;
     }
 
-    int lt, gt;
-    threeWayPartition(vec, low, high, lt, gt);
-    quickSort3WayBubbleHelper(vec, low, lt - 1);
-    quickSort3WayBubbleHelper(vec, gt + 1, high);
-}
-
-void quickSort3WayInsertionHelper(vector<int> &vec, int low, int high) {
-    if (low >= high)
-        return;
-
-    if (high - low <= threshold) {
+    if (high - low <= THRESHOLD) {
         insertionSort(vec, low, high);
         return;
     }
 
-    int lt, gt;
-    threeWayPartition(vec, low, high, lt, gt);
-    quickSort3WayInsertionHelper(vec, low, lt - 1);
-    quickSort3WayInsertionHelper(vec, gt + 1, high);
+    int leftPartitionIndex = 0;
+    int rightPartitionIndex = 0;
+    partitionDualPivot(vec, low, high, leftPartitionIndex, rightPartitionIndex);
+
+    quickSortInsertionHelper(vec, low, leftPartitionIndex - 1);
+    if (vec[leftPartitionIndex] != vec[rightPartitionIndex]) {
+        quickSortInsertionHelper(vec, leftPartitionIndex + 1, rightPartitionIndex - 1);
+    }
+    quickSortInsertionHelper(vec, rightPartitionIndex + 1, high);
 }
 
 double getSpeedInMS(sort_function sortFunction, SortTest &sortTest) {
@@ -248,53 +332,36 @@ double getSpeedInMS(sort_function sortFunction, SortTest &sortTest) {
 }
 
 string vecIsSortedSymbol(bool correct) {
-    return correct ? " ✓" : " ✗";
+    return correct ? "✓" : "✗";
 }
 
-void printCell(sort_function sortFunction, SortTest &sortTest) {
-    cout << "\t\t" << setprecision(6) << fixed << getSpeedInMS(sortFunction, sortTest) << vecIsSortedSymbol(isSorted(sortTest));
+void printCell(double algorithmSpeed, bool isSorted) {
+    cout << setprecision(2) << fixed << algorithmSpeed << " ms " << vecIsSortedSymbol(isSorted) << "\t";
 }
 
-void runThresholdTestsOnAlgorithm(sort_function sortFunction, int n) {
-    cout << "threshold"
-         << "\t\t"
-         << "quickSortRand"
-         << "\t\t"
-         << "quickSortDupes"
-         << "\t\t"
-         << "quickSortSorted" << endl
+void runThresholdTestsOnAlgorithm(string algorithmName, sort_function sortFunction, int n) {
+    cout << "--------- " << algorithmName << " ---------" << endl
          << endl;
 
-    // for (threshold = 1; threshold < n / 100; threshold *= 2) {
+    cout
+        << "quickSortRand"
+        << "\t"
+        << "quickSortDupes"
+        << "\t"
+        << "quickSortSorted"
+        << "\t" << "quickSortReverse" << endl
+        << endl;
+
     SortTest randomSortTest = generateRandomSortTest(n);
     SortTest dupeSortTest = generateDupeSortTest(n);
+    SortTest sortedSortTest = generateSortedSortTest(n);
+    SortTest reverseSortTest = generateReverseSortTest(n);
 
-    cout << left << threshold << right;
-    printCell(sortFunction, randomSortTest);
-    printCell(sortFunction, dupeSortTest);
-    printCell(sortFunction, randomSortTest);
-    cout << endl;
-    // }
+    printCell(getSpeedInMS(sortFunction, randomSortTest), isSorted(randomSortTest));
+    printCell(getSpeedInMS(sortFunction, dupeSortTest), isSorted(dupeSortTest));
+    printCell(getSpeedInMS(sortFunction, sortedSortTest), isSorted(sortedSortTest));
+    printCell(getSpeedInMS(sortFunction, reverseSortTest), isSorted(reverseSortTest));
+
+    cout << endl
+         << endl;
 }
-
-// void runNTestsOnAlgorithm(vector<int> N, sort_function sortFunction, string helperName = "") {
-//     cout << "n"
-//          << "\t\t"
-//          << "quickSortRand"
-//          << "\t\t"
-//          << "quickSortDupes"
-//          << "\t\t"
-//          << "quickSortSorted" << endl
-//          << endl;
-
-//     for (int n : N) {
-//         SortTest randomSortTest = generateRandomSortTest(n);
-//         SortTest dupeSortTest = generateDupeSortTest(n);
-
-//         cout << left << n << right;
-//         printCell(sortFunction, randomSortTest);
-//         printCell(sortFunction, dupeSortTest);
-//         printCell(sortFunction, randomSortTest);
-//         cout << endl;
-//     }
-// }

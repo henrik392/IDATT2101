@@ -11,12 +11,12 @@ using sort_function = void (*)(vector<int> &, int, int);
 
 void runThresholdTestsOnAlgorithm(sort_function sortFunction, int n);
 
-void quickSortMedian(vector<int> &vec, int low, int high);
-void quickSort3Way(vector<int> &vec, int low, int high);
+void quickSort(vector<int> &vec, int low, int high);
+void quickSortDualPivot(vector<int> &vec, int low, int high);
 void quickSort3WayBubbleHelper(vector<int> &vec, int low, int high);
-void quickSort3WayInsertionHelper(vector<int> &vec, int low, int high);
+void quickSortInsertionHelper(vector<int> &vec, int low, int high);
 
-int threshold = 10;
+int THRESHOLD = 10;
 
 int main() {
     srand(time(NULL));
@@ -27,21 +27,21 @@ int main() {
     cout << "Oving 3" << endl
          << endl;
 
-    // runThresholdTestsOnAlgorithm(quickSortMedian, n);
+    // runThresholdTestsOnAlgorithm(quickSort, n);
 
     // cout << endl;
 
     // runThresholdTestsOnAlgorithm(quickSort3Way, n);
 
-    cout << "\n\nbubbleThreshold = " << threshold << " for bobblesortering:" << endl
+    cout << "\n\nbubbleThreshold = " << THRESHOLD << " for bobblesortering:" << endl
          << endl;
 
     runThresholdTestsOnAlgorithm(quickSort3WayBubbleHelper, n);
 
-    cout << "\ninsertionThreshold = " << threshold << " for insettingssortering:" << endl
+    cout << "\ninsertionThreshold = " << THRESHOLD << " for insettingssortering:" << endl
          << endl;
 
-    runThresholdTestsOnAlgorithm(quickSort3WayInsertionHelper, n);
+    runThresholdTestsOnAlgorithm(quickSortInsertionHelper, n);
 
     return 0;
 }
@@ -113,7 +113,7 @@ bool isSorted(SortTest sortTest) {
     return sum == sortTest.checkSum;
 }
 
-int medianOfThree(vector<int> &vec, int low, int high) {
+int median3sort(vector<int> &vec, int low, int high) {
     int mid = low + (high - low) / 2;
     if (vec[low] > vec[high])
         swap(vec[low], vec[high]);
@@ -126,7 +126,7 @@ int medianOfThree(vector<int> &vec, int low, int high) {
 }
 
 int partition(vector<int> &vec, int low, int high) {
-    int pivotIndex = medianOfThree(vec, low, high);
+    int pivotIndex = median3sort(vec, low, high);
     swap(vec[pivotIndex], vec[high]);
     int pivot = vec[high];
 
@@ -143,7 +143,7 @@ int partition(vector<int> &vec, int low, int high) {
 }
 
 void threeWayPartition(vector<int> &vec, int low, int high, int &lt, int &gt) {
-    int pivotIndex = medianOfThree(vec, low, high);
+    int pivotIndex = median3sort(vec, low, high);
     swap(vec[pivotIndex], vec[high]);
     int pivot = vec[high];
 
@@ -190,30 +190,30 @@ void insertionSort(vector<int> &vec, int low, int high) {
     }
 }
 
-void quickSortMedian(vector<int> &vec, int low, int high) {
+void quickSort(vector<int> &vec, int low, int high) {
     if (low >= high)
         return;
 
     int pi = partition(vec, low, high);
-    quickSortMedian(vec, low, pi - 1);
-    quickSortMedian(vec, pi + 1, high);
+    quickSort(vec, low, pi - 1);
+    quickSort(vec, pi + 1, high);
 }
 
-void quickSort3Way(vector<int> &vec, int low, int high) {
+void quickSortDualPivot(vector<int> &vec, int low, int high) {
     if (low >= high)
         return;
 
     int lt, gt;
     threeWayPartition(vec, low, high, lt, gt);
-    quickSort3Way(vec, low, lt - 1);
-    quickSort3Way(vec, gt + 1, high);
+    quickSortDualPivot(vec, low, lt - 1);
+    quickSortDualPivot(vec, gt + 1, high);
 }
 
 void quickSort3WayBubbleHelper(vector<int> &vec, int low, int high) {
     if (low >= high)
         return;
 
-    if (high - low <= threshold) {
+    if (high - low <= THRESHOLD) {
         bubbleSort(vec, low, high);
         return;
     }
@@ -224,19 +224,19 @@ void quickSort3WayBubbleHelper(vector<int> &vec, int low, int high) {
     quickSort3WayBubbleHelper(vec, gt + 1, high);
 }
 
-void quickSort3WayInsertionHelper(vector<int> &vec, int low, int high) {
+void quickSortInsertionHelper(vector<int> &vec, int low, int high) {
     if (low >= high)
         return;
 
-    if (high - low <= threshold) {
+    if (high - low <= THRESHOLD) {
         insertionSort(vec, low, high);
         return;
     }
 
     int lt, gt;
     threeWayPartition(vec, low, high, lt, gt);
-    quickSort3WayInsertionHelper(vec, low, lt - 1);
-    quickSort3WayInsertionHelper(vec, gt + 1, high);
+    quickSortInsertionHelper(vec, low, lt - 1);
+    quickSortInsertionHelper(vec, gt + 1, high);
 }
 
 double getSpeedInMS(sort_function sortFunction, SortTest &sortTest) {
@@ -256,7 +256,7 @@ void printCell(sort_function sortFunction, SortTest &sortTest) {
 }
 
 void runThresholdTestsOnAlgorithm(sort_function sortFunction, int n) {
-    cout << "threshold"
+    cout << "THRESHOLD"
          << "\t\t"
          << "quickSortRand"
          << "\t\t"
@@ -265,11 +265,11 @@ void runThresholdTestsOnAlgorithm(sort_function sortFunction, int n) {
          << "quickSortSorted" << endl
          << endl;
 
-    // for (threshold = 1; threshold < n / 100; threshold *= 2) {
+    // for (THRESHOLD = 1; THRESHOLD < n / 100; THRESHOLD *= 2) {
     SortTest randomSortTest = generateRandomSortTest(n);
     SortTest dupeSortTest = generateDupeSortTest(n);
 
-    cout << left << threshold << right;
+    cout << left << THRESHOLD << right;
     printCell(sortFunction, randomSortTest);
     printCell(sortFunction, dupeSortTest);
     printCell(sortFunction, randomSortTest);

@@ -54,11 +54,11 @@ int partition(vector<int> &vec, int low, int high) {
     return i + 1;
 }
 
-void quickSortMedian(vector<int> &vec, int low, int high) {
+void quickSort(vector<int> &vec, int low, int high) {
     if (low < high) {
         int pi = partition(vec, low, high);
-        quickSortMedian(vec, low, pi - 1);
-        quickSortMedian(vec, pi + 1, high);
+        quickSort(vec, low, pi - 1);
+        quickSort(vec, pi + 1, high);
     }
 }
 
