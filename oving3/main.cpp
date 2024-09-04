@@ -167,7 +167,7 @@ void quickSort(vector<int> &vec, int low, int high) {
     quickSort(vec, partitionIndex + 1, high);
 }
 
-void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
+void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
     // cout << low << " " << high << endl;
     if (vec[low] > vec[high])
         swap(vec[low], vec[high]);
@@ -224,7 +224,7 @@ void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionI
     rightPartitionIndex = iHigh;
 }
 
-void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
+void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
     if (vec[low] > vec[high])
         swap(vec[low], vec[high]);
 
@@ -256,6 +256,7 @@ void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartition
         // alt over iHigh er større eller lik leftPivotValue
 
         if (iLow >= iHigh) {
+            // Dette vil alltid skje fordi enten den første eller den andre while-løkken må kjøre minst en gang
             break;
         }
 
@@ -269,7 +270,34 @@ void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartition
 
     leftPartitionIndex = iLow;
 
-    swap(vec[low], vec[iHigh])
+    // --- Right partition ---
+    // Vi har lyst til å finne en plass hvor alt under er mindre enn eller lik rightPivotValue og alt over er strengt større enn rightPivotValue
+    iLow = leftPartitionIndex;
+    iHigh = high - 1;
+    while (true) {
+        while (vec[iLow] <= rightPivotValue) {
+            iLow++;
+        }
+        // iLow er nå på en plass hvor vec[iLow] er større strengt enn rightPivotValue
+        // alt under iLow er mindre eller lik rightPivotValue
+
+        while (vec[iHigh] > rightPivotValue) {
+            iHigh--;
+        }
+        // iHigh er nå på en plass hvor vec[iHigh] er mindre eller lik rightPivotValue
+        // alt over iHigh er større enn rightPivotValue
+
+        if (iLow >= iHigh) {
+            break;
+        }
+
+        swap(vec[iLow], vec[iHigh]);
+    }
+
+    // Bytter med temp plassen jeg har laget i high
+    swap(vec[iLow], vec[high]);
+
+    rightPartitionIndex = iLow;
 }
 
 void quickSortDualPivot(vector<int> &vec, int low, int high) {
