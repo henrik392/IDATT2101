@@ -28,7 +28,7 @@ int main() {
 
     runThresholdTestsOnAlgorithm("Quick Sort", quickSort, N);
     runThresholdTestsOnAlgorithm("Quick Sort med dual pivot", quickSortDualPivot, N);
-    runThresholdTestsOnAlgorithm("Quick Sort med dual pivot og InsertionHelper", quickSortInsertionHelper, N);
+    // runThresholdTestsOnAlgorithm("Quick Sort med dual pivot og InsertionHelper", quickSortInsertionHelper, N);
 
     return 0;
 }
@@ -225,14 +225,14 @@ void _partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartition
 }
 
 void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
-    if (vec[low] > vec[high])
-        swap(vec[low], vec[high]);
+    cout << "2: " << low << " " << high << endl;
+    // if (vec[low] > vec[high])
+    //     swap(vec[low], vec[high]);
 
-    // Kan bruke median3sort?
     int leftPivotIndex = low + (high - low) / 3;
     int rightPivotIndex = high - (high - low) / 3;
     if (vec[leftPivotIndex] > vec[rightPivotIndex])
-        swap(leftPivotIndex, rightPivotIndex);
+        swap(vec[leftPivotIndex], vec[rightPivotIndex]);
 
     int leftPivotValue = vec[leftPivotIndex];
     int rightPivotValue = vec[rightPivotIndex];
@@ -243,16 +243,16 @@ void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionI
     int iLow = low;
     int iHigh = high - 2;
     while (true) {
-        while (vec[iLow] < leftPivotValue) {
+        while (vec[iLow] < leftPivotValue && iLow < high - 2) {
             iLow++;
         }
         // iLow er nå på en plass hvor vec[iLow] er lik eller større enn leftPivotValue
         // alt under iLow er mindre enn leftPivotValue
 
-        while (vec[iHigh] >= leftPivotValue) {
+        while (vec[iHigh] >= leftPivotValue && iHigh > low) {
             iHigh--;
         }
-        // iHigh er nå på en plass hvor vec[iHigh] er mindre enn leftPivotValue
+        // iHigh er nå på en plass hvor vec[iHigh] er strengt mindre enn leftPivotValue
         // alt over iHigh er større eller lik leftPivotValue
 
         if (iLow >= iHigh) {
@@ -272,16 +272,17 @@ void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionI
 
     // --- Right partition ---
     // Vi har lyst til å finne en plass hvor alt under er mindre enn eller lik rightPivotValue og alt over er strengt større enn rightPivotValue
-    iLow = leftPartitionIndex;
+    
+    iLow = leftPartitionIndex + 1;
     iHigh = high - 1;
     while (true) {
-        while (vec[iLow] <= rightPivotValue) {
+        while (vec[iLow] <= rightPivotValue && iLow < high - 1) {
             iLow++;
         }
-        // iLow er nå på en plass hvor vec[iLow] er større strengt enn rightPivotValue
+        // iLow er nå på en plass hvor vec[iLow] er strengt større enn rightPivotValue
         // alt under iLow er mindre eller lik rightPivotValue
 
-        while (vec[iHigh] > rightPivotValue) {
+        while (vec[iHigh] > rightPivotValue && iHigh > leftPartitionIndex + 1) {
             iHigh--;
         }
         // iHigh er nå på en plass hvor vec[iHigh] er mindre eller lik rightPivotValue
@@ -301,8 +302,17 @@ void partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionI
 }
 
 void quickSortDualPivot(vector<int> &vec, int low, int high) {
+    cout << "1: " << low << " " << high << endl;
+    if (low >= high) {
+        cout << "return without sorting" << endl
+             << endl;
+        return;
+    }
+
     if (high - low <= 2) {
         median3sort(vec, low, high);
+        cout << "return and sort" << endl
+             << endl;
         return;
     }
 
@@ -386,9 +396,9 @@ void runThresholdTestsOnAlgorithm(string algorithmName, sort_function sortFuncti
     SortTest reverseSortTest = generateReverseSortTest(n);
 
     printCell(getSpeedInMS(sortFunction, randomSortTest), isSorted(randomSortTest));
-    printCell(getSpeedInMS(sortFunction, dupeSortTest), isSorted(dupeSortTest));
-    printCell(getSpeedInMS(sortFunction, sortedSortTest), isSorted(sortedSortTest));
-    printCell(getSpeedInMS(sortFunction, reverseSortTest), isSorted(reverseSortTest));
+    // printCell(getSpeedInMS(sortFunction, dupeSortTest), isSorted(dupeSortTest));
+    // printCell(getSpeedInMS(sortFunction, sortedSortTest), isSorted(sortedSortTest));
+    // printCell(getSpeedInMS(sortFunction, reverseSortTest), isSorted(reverseSortTest));
 
     cout << endl
          << endl;
