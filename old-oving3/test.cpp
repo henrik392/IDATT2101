@@ -5,14 +5,14 @@
 using namespace std;
 
 struct SortTest {
-    vector<int> data;
+    vector<int> vec;
     int checkSum;
 
-    SortTest(vector<int> data, int checkSum) : data(data), checkSum(checkSum) {}
+    SortTest(vector<int> data, int checkSum) : vec(data), checkSum(checkSum) {}
 };
 
 bool isSorted(SortTest &testVector) {
-    vector<int> &vec = testVector.data;
+    vector<int> &vec = testVector.vec;
     int sum = 0;
     for (size_t i = 0; i < vec.size(); i++) {
         if (i < vec.size() - 1 && vec[i] > vec[i + 1])
@@ -80,7 +80,7 @@ void bubbleSort(vector<int> &vec, int low, int high) {
 int main() {
     vector<int> vec = {3, 6, 8, 10, 1, 2, 1};
     SortTest sortTest = generateRandomVector(1000);
-    bubbleSort(sortTest.data, 0, sortTest.data.size() - 1);
+    bubbleSort(sortTest.vec, 0, sortTest.vec.size() - 1);
     // for (size_t i = 0; i < sortTest.data.size(); i++) {
     //     cout << sortTest.data[i] << " ";
     // }
