@@ -25,12 +25,14 @@ typedef unsigned long long ull;
 int main() {
     const int N = 50000000;
 
-    cout << "Oving 3" << endl
+    cout << "Oving 3" << endl;
+
+    cout << "N = " << N << endl
          << endl;
 
     runThresholdTestsOnAlgorithm("Quick Sort", quickSort, N);
     runThresholdTestsOnAlgorithm("Quick Sort med dual pivot", quickSortDualPivot, N);
-    // runThresholdTestsOnAlgorithm("Quick Sort med dual pivot og InsertionHelper", quickSortInsertionHelper, N);
+    runThresholdTestsOnAlgorithm("Quick Sort med dual pivot og InsertionHelper", quickSortInsertionHelper, N);
 
     return 0;
 }
@@ -212,83 +214,6 @@ void partitionDualPivot(vector<int> &vec, int l, int h, int &lp, int &rp) {
     rp = g;
 }
 
-void __partitionDualPivot(vector<int> &vec, int low, int high, int &leftPartitionIndex, int &rightPartitionIndex) {
-    cout << "2: " << low << " " << high << endl;
-    // if (vec[low] > vec[high])
-    //     swap(vec[low], vec[high]);
-
-    int leftPivotIndex = low + (high - low) / 3;
-    int rightPivotIndex = high - (high - low) / 3;
-    if (vec[leftPivotIndex] > vec[rightPivotIndex])
-        swap(vec[leftPivotIndex], vec[rightPivotIndex]);
-
-    int leftPivotValue = vec[leftPivotIndex];
-    int rightPivotValue = vec[rightPivotIndex];
-    swap(vec[leftPivotIndex], vec[high - 1]);
-    swap(vec[rightPivotIndex], vec[high]);
-
-    // Inklusiv low og high
-    int iLow = low;
-    int iHigh = high - 2;
-    while (true) {
-        while (vec[iLow] < leftPivotValue) {
-            iLow++;
-        }
-        // iLow er nå på en plass hvor vec[iLow] er lik eller større enn leftPivotValue
-        // alt under iLow er mindre enn leftPivotValue
-
-        while (vec[iHigh] >= leftPivotValue && iHigh > low) {
-            iHigh--;
-        }
-        // iHigh er nå på en plass hvor vec[iHigh] er strengt mindre enn leftPivotValue
-        // alt over iHigh er større eller lik leftPivotValue
-
-        if (iLow >= iHigh) {
-            // Dette vil alltid skje fordi enten den første eller den andre while-løkken må kjøre minst en gang
-            break;
-        }
-
-        // Plassene til iLow og iHigh byttes om slik at alt under iLow er mindre enn leftPivotValue og alt over iHigh er større eller lik leftPivotValue
-        swap(vec[iLow], vec[iHigh]);
-    }
-
-    // Bytter med temp plassen jeg har laget i high - 1,
-    // siden iLow lander på et element som er større eller lik leftPivotValue er det greit å bytte denne ut med high - 1
-    swap(vec[iLow], vec[high - 1]);
-
-    leftPartitionIndex = iLow;
-
-    // --- Right partition ---
-    // Vi har lyst til å finne en plass hvor alt under er mindre enn eller lik rightPivotValue og alt over er strengt større enn rightPivotValue
-    swap(vec[high], vec[leftPartitionIndex + 1]);
-    iLow = leftPartitionIndex + 2;
-    iHigh = high;
-    while (true) {
-        while (vec[iLow] <= rightPivotValue && iLow < high) {
-            iLow++;
-        }
-        // iLow er nå på en plass hvor vec[iLow] er strengt større enn rightPivotValue
-        // alt under iLow er mindre eller lik rightPivotValue
-
-        while (vec[iHigh] > rightPivotValue) {
-            iHigh--;
-        }
-        // iHigh er nå på en plass hvor vec[iHigh] er mindre eller lik rightPivotValue
-        // alt over iHigh er større enn rightPivotValue
-
-        if (iLow >= iHigh) {
-            break;
-        }
-
-        swap(vec[iLow], vec[iHigh]);
-    }
-
-    // Bytter med temp plassen jeg har laget i high
-    swap(vec[iHigh], vec[leftPartitionIndex + 1]);
-
-    rightPartitionIndex = iHigh;
-}
-
 void quickSortDualPivot(vector<int> &vec, int low, int high) {
     if (low >= high) {
         return;
@@ -323,6 +248,10 @@ void insertionSort(vector<int> &vec, int low, int high) {
 }
 
 void quickSortInsertionHelper(vector<int> &vec, int low, int high) {
+    if (low >= high) {
+        return;
+    }
+
     if (high - low <= 2) {
         median3sort(vec, low, high);
         return;
@@ -365,12 +294,12 @@ void runThresholdTestsOnAlgorithm(string algorithmName, sort_function sortFuncti
          << endl;
 
     cout
-        << "quickSortRand"
+        << "Random"
+        << "\t\t"
+        << "Duplicates"
         << "\t"
-        << "quickSortDupes"
-        << "\t"
-        << "quickSortSorted"
-        << "\t" << "quickSortReverse" << endl
+        << "Sorted"
+        << "\t\t" << "Sorted descendig" << endl
         << endl;
 
     SortTest randomSortTest = generateRandomSortTest(n);
