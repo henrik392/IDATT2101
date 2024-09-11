@@ -11,7 +11,6 @@ using namespace std;
 const int MOD = 1e9 + 7;
 
 using sort_function = void (*)(vector<int> &, int, int);
-using sort_function_dual = void (*)(vector<int> &, int, int);
 
 void runThresholdTestsOnAlgorithm(string algorithmName, sort_function sortFunction, int n);
 
@@ -21,10 +20,10 @@ void quickSortInsertionHelper(vector<int> &vec, int low, int high);
 
 const int THRESHOLD = 10;
 
-int main() {
-    srand(time(NULL));
+typedef unsigned long long ull;
 
-    const int N = 50000;
+int main() {
+    const int N = 50000000;
 
     cout << "Oving 3" << endl
          << endl;
@@ -38,9 +37,9 @@ int main() {
 
 struct SortTest {
     vector<int> data;
-    int checkSum;
+    ull checkSum;
 
-    SortTest(vector<int> data, int checkSum) : data(data), checkSum(checkSum) {}
+    SortTest(vector<int> data, ull checkSum) : data(data), checkSum(checkSum) {}
 };
 
 SortTest generateRandomSortTest(int n) {
@@ -50,10 +49,10 @@ SortTest generateRandomSortTest(int n) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist;
 
-    int sum = 0;
+    ull sum = 0;
     for (int i = 0; i < n; i++) {
         vec[i] = dist(gen);
-        sum = (sum + vec[i] % MOD) % MOD;
+        sum = (sum + (vec[i] % MOD)) % MOD;
     }
 
     return SortTest(vec, sum);
@@ -68,7 +67,7 @@ SortTest generateDupeSortTest(int n) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist;
 
-    int sum = 0;
+    ull sum = 0;
     for (int i = 0; i < n; i++) {
         switch (i & 1) {
         case 0:
@@ -78,7 +77,7 @@ SortTest generateDupeSortTest(int n) {
             vec[i] = dist(gen);
             break;
         }
-        sum = (sum + vec[i] % MOD) % MOD;
+        sum = (sum + (vec[i] % MOD)) % MOD;
     }
 
     return SortTest(vec, sum);
@@ -89,10 +88,10 @@ SortTest generateSortedSortTest(int n) {
 
     vector<int> vec(n);
 
-    int sum = 0;
+    ull sum = 0;
     for (int i = 0; i < n; i++) {
         vec[i] = i - n / 2;
-        sum = (sum + vec[i] % MOD) % MOD;
+        sum = (sum + (vec[i] % MOD)) % MOD;
     }
 
     return SortTest(vec, sum);
@@ -103,10 +102,10 @@ SortTest generateReverseSortTest(int n) {
 
     vector<int> vec(n);
 
-    int sum = 0;
+    ull sum = 0;
     for (int i = 0; i < n; i++) {
         vec[i] = n / 2 - i;
-        sum = (sum + vec[i] % MOD) % MOD;
+        sum = (sum + (vec[i] % MOD)) % MOD;
     }
 
     return SortTest(vec, sum);
@@ -114,14 +113,14 @@ SortTest generateReverseSortTest(int n) {
 
 bool isSorted(SortTest sortTest) {
     vector<int> &vec = sortTest.data;
-    int sum = 0;
+    ull sum = 0;
     for (size_t i = 0; i < vec.size(); i++) {
         if (i < vec.size() - 1 && vec[i] > vec[i + 1]) {
             cout << "Feil: " << i << " " << vec[i] << " " << vec[i + 1] << endl;
             return false;
         }
 
-        sum = (sum + vec[i] % MOD) % MOD;
+        sum = (sum + (vec[i] % MOD)) % MOD;
     }
 
     if (sum != sortTest.checkSum) {
@@ -179,6 +178,9 @@ void quickSort(vector<int> &vec, int low, int high) {
 }
 
 void partitionDualPivot(vector<int> &vec, int l, int h, int &lp, int &rp) {
+    swap(vec[l], vec[l + (h - l) / 3]);
+    swap(vec[h], vec[h - (h - l) / 3]);
+
     if (vec[l] > vec[h])
         std::swap(vec[l], vec[h]);
 
