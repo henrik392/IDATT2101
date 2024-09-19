@@ -1,208 +1,266 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <set>
-#include <stack>
-#include <unistd.h>
+#include <queue>
+#include <random>
+#include <vector>
 
 using namespace std;
 
-struct ListNode {
-    int index;
-    ListNode *next;
+void oppgave1();
+void oppgave2();
 
-    ListNode(int index) : index(index), next(nullptr) {}
-};
+int main() {
+    oppgave1();
 
-struct TreeNode {
-    char value;
-    TreeNode *left;
-    TreeNode *right;
+    cout << endl;
 
-    TreeNode(char value) : value(value), left(nullptr), right(nullptr) {}
-};
+    oppgave2();
 
-int oppgave1(int n, int m) {
-    // n = antall soldater, m = lengde på hopp
-
-    // Creating circluar list, O(n)
-    ListNode *head = new ListNode(1);
-    ListNode *current = head;
-
-    for (int i = 2; i <= n; i++) {
-        current->next = new ListNode(i);
-        current = current->next;
-    }
-
-    current->next = head;
-
-    // Removing nodes from list until one left: O(m*(n-1)) = O(m*n), because n-1 nodes is removed and m nodes must be traveresed for each node to be deleted.
-
-    int t = 0;
-    ListNode *prev = current;
-    current = head;
-    while (current->next != current) {
-        t++;
-
-        if (t == m) {
-            t = 0;
-            prev->next = current->next;
-            current = prev;
-        }
-
-        prev = current;
-        current = current->next;
-    }
-
-    // Found the last soilder standing:
-    return current->index;
+    return 0;
 }
 
-bool oppgave2(const string &fileName) {
-    map<char, char> closedToOpen = {
-        {'}', '{'},
-        {']', '['},
-        {')', '('},
-    };
+template <typename KeyType>
+class HashTable {
+  protected:
+    int size;
+    int elements = 0;
+    int collisions = 0;
 
-    set<char> openBrackets = {'{', '[', '(', '"'};
+    virtual int hashFunction(const KeyType &key) const = 0;
 
-    stack<char> lastOpenBrackets;
+  public:
+    HashTable(int size) : size(size) {}
 
-    ifstream file(fileName);
-    if (!file.is_open()) {
-        cerr << "Error: Could not open file " << fileName << endl;
-        return false;
+    virtual void insert(const KeyType &key, int value) = 0;
+    virtual int get(const KeyType &key) const = 0;
+
+    double getLoadFactor() const {
+        return static_cast<double>(elements) / size;
     }
 
-    bool inComment = false;
-    bool inString = false;
+    int getCollisions() const {
+        return collisions;
+    }
 
-    char c;
-    while (file.get(c)) {
-        if (inComment) {
-            if (c == '\n')
-                inComment = false;
+    double getCollisionsPerElement() const {
+        return static_cast<double>(collisions) / elements;
+    }
 
-            continue;
+    virtual ~HashTable() = default;
+};
+
+class HashTableLinked : public HashTable<string> {
+  private:
+    struct LinkedNode {
+        string key;
+        int value;
+        LinkedNode *next = nullptr;
+    };
+    LinkedNode *table;
+
+    int hashFunction(const string &key) const override {
+        int hash = 0;
+        for (char c : key) {
+            hash = (7 * hash + c) % size;
+        }
+        return hash;
+    }
+
+  public:
+    HashTableLinked(int size) : HashTable<string>(size) {
+        table = new LinkedNode[size];
+    }
+
+    void insert(const string &key, int value) override {
+        elements++;
+        int index = hashFunction(key);
+        LinkedNode *node = new LinkedNode{key, value, table[index].next};
+
+        if (table[index].next != nullptr) {
+            collisions++;
+            cout << "There has been a collision between \"" << key << "\" and \"" << table[index].next->key << "\"" << endl;
         }
 
-        if (inString) {
-            if (c == '"')
-                inString = false;
+        table[index].next = node;
+    }
 
-            continue;
+    int get(const string &key) const override {
+        int index = hashFunction(key);
+        LinkedNode *node = table[index].next;
+        while (node != nullptr) {
+            if (node->key == key) {
+                return node->value;
+            }
+            node = node->next;
+        }
+        return -1;
+    }
+
+    ~HashTableLinked() {
+        for (int i = 0; i < size; ++i) {
+            LinkedNode *current = table[i].next;
+            while (current != nullptr) {
+                LinkedNode *temp = current;
+                current = current->next;
+                delete temp;
+            }
+        }
+        delete[] table;
+    }
+};
+
+class DoubleHashingHashTable : public HashTable<int> {
+  private:
+    struct Entry {
+        int key;
+        int value;
+        bool isOccupied = false;
+    };
+
+    Entry *table;
+
+    int hashFunction(const int &key) const override {
+        static const int PRIME = 31;
+        return abs((key * PRIME) % size);
+    }
+
+    int hashFunction2(const int &key) const {
+        static const int PRIME = 37;
+        return PRIME - (key % PRIME);
+    }
+
+  public:
+    DoubleHashingHashTable(int size) : HashTable<int>(size) {
+        table = new Entry[size];
+    }
+
+    void insert(const int &key, int value) override {
+        elements++;
+        int index = hashFunction(key);
+        int step = hashFunction2(key);
+
+        while (table[index].isOccupied) {
+            collisions++;
+            index = (index + step) % size;
         }
 
-        if (c == '/') {
-            file.get(c);
-            if (c == '/')
-                inComment = true;
+        table[index].key = key;
+        table[index].value = value;
+        table[index].isOccupied = true;
+    }
 
-            continue;
+    int get(const int &key) const override {
+        int index = hashFunction(key);
+        int step = hashFunction2(key);
+
+        while (table[index].isOccupied) {
+            if (table[index].key == key) {
+                return table[index].value;
+            }
+            index = (index + step) % size;
         }
 
-        if (c == '"') {
-            inString = true;
-            continue;
-        }
+        return -1;
+    }
 
-        if (!lastOpenBrackets.empty() && lastOpenBrackets.top() == '"') {
-            if (c == '"')
-                lastOpenBrackets.pop();
-            continue;
-        }
+    ~DoubleHashingHashTable() {
+        delete[] table;
+    }
+};
 
-        if (openBrackets.count(c)) {
-            lastOpenBrackets.push(c);
-        } else if (closedToOpen.count(c)) {
-            if (lastOpenBrackets.empty() || lastOpenBrackets.top() != closedToOpen[c])
-                return false;
+void oppgave1() {
+    HashTableLinked table(173);
 
-            lastOpenBrackets.pop();
+    ifstream file("navn.txt");
+
+    if (!file.is_open()) {
+        cout << "Could not open file." << endl;
+        return;
+    }
+
+    vector<string> names;
+    string name;
+    while (getline(file, name)) {
+        if (!name.empty()) {
+            table.insert(name, 1);
+            names.push_back(name);
         }
     }
 
     file.close();
-    return lastOpenBrackets.empty();
-}
 
-double verdiTilNode(TreeNode *node) {
-    if (node->value == '+')
-        return verdiTilNode(node->left) + verdiTilNode(node->right);
-    else if (node->value == '-')
-        return verdiTilNode(node->left) - verdiTilNode(node->right);
-    else if (node->value == '*')
-        return verdiTilNode(node->left) * verdiTilNode(node->right);
-    else if (node->value == '/')
-        return verdiTilNode(node->left) / verdiTilNode(node->right);
-    else
-        return node->value - '0';
-}
+    cout << "Lastfaktor: " << table.getLoadFactor() << endl;
+    cout << "Kollisjoner: " << table.getCollisions() << endl;
+    cout << "Kollisjoner per person: " << table.getCollisionsPerElement() << endl;
 
-string uttrykkFraNode(TreeNode *node) {
-    // inorder
-    if (node == nullptr)
-        return "";
-
-    return "(" + uttrykkFraNode(node->left) + node->value + uttrykkFraNode(node->right) + ")";
-
-    // preorder
-    string s = "";
-    if (node->value == '+') {
-        s += uttrykkFraNode(node->left) + " + " + uttrykkFraNode(node->right);
-    } else if (node->value == '-') {
-        s += uttrykkFraNode(node->left) + " - " + uttrykkFraNode(node->right);
-    } else if (node->value == '*') {
-        s += "(" + uttrykkFraNode(node->left) + ") * (" + uttrykkFraNode(node->right) + ")";
-    } else if (node->value == '/') {
-        s += "(" + uttrykkFraNode(node->left) + ") / (" + uttrykkFraNode(node->right) + ")";
-    } else {
-        s += node->value;
+    bool found_all = true;
+    for (string name : names) {
+        found_all = found_all && table.get(name) == 1;
     }
 
-    return s;
+    if (found_all) {
+        cout << "All names were found in the hash table." << endl;
+    } else {
+        cout << "Not all names were found in the hash table." << endl;
+    }
 }
 
-void oppgave3() {
-    TreeNode *root = new TreeNode('/');
+vector<int> generateRandomUniqueNums(int n) {
+    vector<int> nums;
+    int prevNum = 0;
+    for (int i = 0; i < n; i++) {
+        prevNum += rand() % 100 + 1;
+        nums.push_back(prevNum);
+    }
 
-    TreeNode *teller = new TreeNode('*');
+    random_device rd;
+    mt19937 g(rd());
 
-    teller->left = new TreeNode('2');
+    shuffle(nums.begin(), nums.end(), g);
 
-    teller->right = new TreeNode('-');
-    teller->right->left = new TreeNode('1');
-    teller->right->right = new TreeNode('3');
+    return nums;
+}
 
-    TreeNode *nevner = new TreeNode('+');
-    nevner->left = new TreeNode('4');
+void testHashTable(HashTable<int> &hashTable, double fillPercent, int m, vector<int> &nums) {
+    int elements = m * fillPercent;
 
-    nevner->right = new TreeNode('*');
-    nevner->right->left = new TreeNode('2');
-    nevner->right->right = new TreeNode('2');
+    chrono::steady_clock::time_point start = chrono::steady_clock::now();
+    for (int i = 0; i < elements; i++) {
+        int num = nums[i];
+        hashTable.insert(num, 1);
+    }
 
-    root->left = teller;
-    root->right = nevner;
+    chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
-    cout << "Uttrykket til treet er: " << uttrykkFraNode(root) << endl;
-    cout << "Verdien til treet er: " << verdiTilNode(root) << endl;
-};
+    cout << "The hashtable used " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms to insert " << fillPercent * 100 << "% of m" << endl;
+    cout << "Collisions: " << hashTable.getCollisions() << endl;
+}
 
-int main() {
+void oppgave2() {
+    // min: 10000000;
+    const int NEAREST_PRIME = 10000019;
+    int m = NEAREST_PRIME;
+    // m = 65537;
 
-    // Oppgave 1
-    cout << "Oppgave 1:\n";
-    cout << "Soilder number " << oppgave1(40, 3) << " is the last one standig." << endl;
-    cout << "Soilder number " << oppgave1(40, 3) << " is the last one standig." << endl;
+    vector<int> nums = generateRandomUniqueNums(m);
 
-    // Oppgave 2, har også støtte for kommentarer
-    cout << "\nOppgave 2:\n";
-    cout << oppgave2("oving4/oppgave2test1.cpp") << endl;
-    cout << oppgave2("oving4/oppgave2test2.cpp") << endl;
+    // LinearProbingHashTable linearProbingHashTable(m);
+    // DoubleHashingHashTable doubleHashingHashTable(m);
 
-    cout << "\nOppgave3:\n";
-    oppgave3();
+    double fillPercentages[] = {
+        0.5,
+        0.8,
+        0.9,
+        0.99,
+        1};
 
-    return 0;
+    cout << "m = " << nums.size() << endl;
+
+    cout << "\nDouble hashing:" << endl;
+    for (double fillPercentage : fillPercentages) {
+        DoubleHashingHashTable doubleHashingHashTable(m);
+        testHashTable(doubleHashingHashTable, fillPercentage, m, nums);
+        cout << endl;
+    }
 }
