@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <random>
 #include <vector>
@@ -169,6 +170,24 @@ class DoubleHashingHashTable : public HashTable<int> {
     }
 };
 
+template <typename T>
+void testHashTable(HashTable<T> &hashTable, const double fillPercent, int m, vector<T> &elements) {
+    const int NUM_ELEMENTS = m * fillPercent;
+
+    chrono::steady_clock::time_point start = chrono::steady_clock::now();
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        T element = elements[i];
+        hashTable.insert(element, 1);
+    }
+
+    chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
+    cout << "Hashtabellen brukte " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms for å legg inn " << fillPercent * 100 << "% av m" << endl;
+    cout << "Kollisjoner: " << hashTable.getCollisions() << endl;
+    cout << "Kollisjoner per element: " << hashTable.getCollisionsPerElement() << endl;
+    cout << "Lastfaktor: " << hashTable.getLoadFactor() << endl;
+}
+
 void oppgave1() {
     HashTableLinked table(173);
 
@@ -183,16 +202,13 @@ void oppgave1() {
     string name;
     while (getline(file, name)) {
         if (!name.empty()) {
-            table.insert(name, 1);
             names.push_back(name);
         }
     }
 
     file.close();
 
-    cout << "Lastfaktor: " << table.getLoadFactor() << endl;
-    cout << "Kollisjoner: " << table.getCollisions() << endl;
-    cout << "Kollisjoner per person: " << table.getCollisionsPerElement() << endl;
+    testHashTable<string>(table, 1, names.size(), names);
 
     bool found_all = true;
     for (string name : names) {
@@ -200,9 +216,9 @@ void oppgave1() {
     }
 
     if (found_all) {
-        cout << "All names were found in the hash table." << endl;
+        cout << "Alle navn ble funnet i tabellen" << endl;
     } else {
-        cout << "Not all names were found in the hash table." << endl;
+        cout << "Ikke alle navn ble funnet i tabellen" << endl;
     }
 }
 
@@ -222,21 +238,6 @@ vector<int> generateRandomUniqueNums(int n) {
     return nums;
 }
 
-void testHashTable(HashTable<int> &hashTable, double fillPercent, int m, vector<int> &nums) {
-    int elements = m * fillPercent;
-
-    chrono::steady_clock::time_point start = chrono::steady_clock::now();
-    for (int i = 0; i < elements; i++) {
-        int num = nums[i];
-        hashTable.insert(num, 1);
-    }
-
-    chrono::steady_clock::time_point end = chrono::steady_clock::now();
-
-    cout << "The hashtable used " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms to insert " << fillPercent * 100 << "% of m" << endl;
-    cout << "Collisions: " << hashTable.getCollisions() << endl;
-}
-
 void oppgave2() {
     // min: 10000000;
     const int NEAREST_PRIME = 10000019;
@@ -248,19 +249,25 @@ void oppgave2() {
     // LinearProbingHashTable linearProbingHashTable(m);
     // DoubleHashingHashTable doubleHashingHashTable(m);
 
-    double fillPercentages[] = {
-        0.5,
-        0.8,
-        0.9,
-        0.99,
-        1};
+    const double FILL_PERCENTAGE = 0.75;
 
     cout << "m = " << nums.size() << endl;
 
-    cout << "\nDouble hashing:" << endl;
-    for (double fillPercentage : fillPercentages) {
-        DoubleHashingHashTable doubleHashingHashTable(m);
-        testHashTable(doubleHashingHashTable, fillPercentage, m, nums);
-        cout << endl;
+    cout << "\n------ Double hashing: ------" << endl;
+    DoubleHashingHashTable doubleHashingHashTable(m);
+    testHashTable<int>(doubleHashingHashTable, FILL_PERCENTAGE, m, nums);
+    cout << endl;
+
+    cout << "\n------ Standard c++ map<int>: ------" << endl;
+    const int NUM_ELEMENTS = m * FILL_PERCENTAGE;
+    map<int, int> map;
+
+    chrono::steady_clock::time_point start = chrono::steady_clock::now();
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        int element = nums[i];
+        map.insert({element, 1});
     }
+
+    chrono::steady_clock::time_point end = chrono::steady_clock::now();
+    cout << "Standard c++ map<int> brukte " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms for å legg inn " << FILL_PERCENTAGE * 100 << "% av m" << endl;
 }
