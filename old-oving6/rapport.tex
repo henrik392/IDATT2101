@@ -1,0 +1,74 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[norsk]{babel}
+\usepackage{amsmath, amssymb, amsthm}  % For matematisk notasjon
+\usepackage{algorithm, algorithmic}    % For å skrive algoritmer
+\usepackage{graphicx}                  % For å inkludere bilder
+\usepackage{hyperref}                  % For hyperlenker
+\usepackage{pgfplots}                  % For grafer
+\pgfplotsset{compat=1.16}
+
+\title{Øving n - Algoritmer og datastrukturer}
+\author{Henrik Halvorsen Kvamme}
+\date{\today}
+
+\newtheorem{theorem}{Teorem}
+\newtheorem{definition}{Definisjon}
+\newtheorem{example}{Eksempel}
+
+\begin{document}
+
+\begin{center}
+    \includegraphics[width=0.5\textwidth]{../images/NTNU_Logo.png}
+    
+    \vspace{1.5em}  % Optional vertical space
+    
+    {\LARGE \textbf{Øving 6} \\[0.5em] \text{Algoritmer og Datastrukturer}}  % Title
+    \vspace{1em}  % Optional vertical space
+    
+    {\large Henrik Halvorsen Kvamme}\\  % Author name
+    \vspace{0.5em}  % Optional vertical space
+    
+    {\today}  % Date
+\end{center}
+
+\vspace{2em}
+
+\tableofcontents
+
+\newpage
+
+\section{Introduksjon}
+Det er to deloppgaver. Første deloppgave ber deg utføre et bredde-først søk fra en startnode i en graf og printe ut alle nodene, deres avstand til startnoden, og den forrige noden for i søket til hver node.
+
+Den andre deloppgaven ber deg topologisk sortere en graf. Det er ikke alltid mulig å topologisk sortere en graf, og i dette tilfellet printer jeg ut at det ikke er mulig å topologisk sortere grafen.
+
+\textbf{Krav for godkjenning er:}
+\begin{itemize}
+    \item Bredde-først søk fungerer og gir rett resultat for de fem første grafene. (ø6g1, ø6g2, ø6g3, ø6g5 og ø6g7)
+    Det er ikke nødvendig å håndtere Skandinavia-filen nå, men den er eksempel på hvor store filer dere vil trenge å håndtere i senere øvinger.
+    \item Bredde-først søk kan kjøres med en hvilken som helst node som startnode.
+    \item Topologisk sortering gir rett resultat på ø6g5 og ø6g7. Det er flere mulige riktige sorteringer på begge.
+\end{itemize}
+
+\section{Teori}
+Bredde-først søk begynner fra en startnode og sjekker iterativt alle naboer. Deretter sjekker den alle naboene til naboene, og så videre. Dette gjør at den finner alle noder som er på avstand 1 fra startnoden, deretter alle noder som er på avstand 2 fra startnoden, og så videre. Dette gjør at den finner den korteste veien fra startnoden til alle andre noder i grafen. Bredde først tar ikke hensyn til lengde på kanter, og er derfor ikke optimalt for å finne korteste vei i en graf der ikke alle kanter er like lange. Da bruker man f.eks. Djikstras algoritme.
+
+Topologisk sortering Handler om å sortere noder i en graf slik at alle kanter går fra venstre mot høyre. Det er ikke alltid mulig å topologisk sortere en graf, da vil algorimten gi beskjed om dette. Det er kun mulig å topologisk sortere en graf som ikke har sykler (Directed Acyclic Graphs 'DAG'-grafer). En sykel er en vei i grafen som starter og slutter i samme node. Hvis en graf har en sykel, vil det ikke være mulig å topologisk sortere grafen.
+
+Det er vanlig å bruke både bredde-først med Khans algoritme og DFS for topologisk sortering. Jeg velger å bruke \textbf{Khans algortime}:
+
+\begin{enumerate}
+    \item Finn alle noder som ikke har noen kanter inn til seg. Legg disse nodene i en kø. Antall kanter inn til en node er dens "indegree".
+    \item Ta ut en node fra køen og legg den i en liste. Fjern alle kanter ut fra denne noden. Hvis en node ikke har flere kanter inn til seg, legg den i køen.
+    \item Gjenta steg 2 til køen er tom.
+  \end{enumerate}
+
+Hvis listen ikke inneholder alle nodene i grafen, er det ikke mulig å topologisk sortere grafen. Ellers returner listen.
+
+\section{Konklusjon}
+Jeg valgte å implementere en klasse for hver graf som tar inn filnavn for å initialiseres. Klassen har en metode for å løse for første deloppgave, bredde-først, og en for andre oppgave, topologisk sortering.
+
+Kildekoden ligger vedlagt i main.cpp. Main funksjonen kjører flere tester for å vise at den utfører oppgaven. 
+
+\end{document}
