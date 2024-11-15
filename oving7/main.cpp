@@ -18,6 +18,20 @@ using namespace std;
 class Map {
 private:
   string nodesFile, edgesFile, interestPointsFile;
+  unordered_map<int, pair<int, string>> interestPoints; // node_id -> interest_id + name
+  unordered_map<string, pii> nameTointerestPointId;     // name -> id + interest
+  vector<vector<pii>> inverseEdges;
+  vector<vector<pii>> edges;
+  vector<pdd> nodeCoordinate;
+  int n, m, k;
+
+  const map<string, int> categoryCode = {
+      {"Stedsnavn", 1},
+      {"Bensinstasjon", 2},
+      {"Ladestasjon", 4},
+      {"Spisested", 8},
+      {"Drikkested", 16},
+      {"Overnattingssted", 32}};
 
   void readNodes() {
     std::locale::global(std::locale::classic());
@@ -29,7 +43,7 @@ private:
 
     file >> n;
 
-    nodes.resize(n);
+    nodeCoordinate.resize(n);
     edges.resize(n);
     inverseEdges.resize(n);
 
@@ -37,7 +51,7 @@ private:
       int id;
       double latitude, longitude;
       file >> id >> latitude >> longitude;
-      nodes[i] = {latitude, longitude};
+      nodeCoordinate[i] = {latitude, longitude};
       // cout << "Node: " << i << " Latitude: " << latitude << " Longitude: " << longitude << endl;
     }
 
@@ -97,31 +111,36 @@ private:
   }
 
   bool interestPointHasCategory(int interestPointNodeId, string category) {
-    map<string, int> categoryCode = {
-        {"Stedsnavn", 1},
-        {"Bensinstasjon", 2},
-        {"Ladestasjon", 4},
-        {"Spisested", 8},
-        {"Drikkested", 16},
-        {"Overnattingssted", 32}};
-
     if (categoryCode.find(category) == categoryCode.end()) {
       return false;
     }
 
-    return interestPoints[interestPointNodeId].first & categoryCode[category];
+    return interestPoints[interestPointNodeId].first & categoryCode.at(category);
   }
 
 public:
-  unordered_map<int, pair<int, string>> interestPoints; // node_id -> interest_id + name
-  unordered_map<string, pii> nameTointerestPointId;     // name -> id + interest
-  vector<vector<pii>> inverseEdges;
-  vector<vector<pii>> edges;
-  vector<pdd> nodes;
-  int n, m, k;
-
   Map(string nodesFile, string edgesFile, string interestPointsFile) : nodesFile(nodesFile), edgesFile(edgesFile), interestPointsFile(interestPointsFile) {
     readMap();
+  }
+
+  void reverse() {
+    swap(edges, inverseEdges);
+  }
+
+  vector<pii> &getNieghbors(int node) {
+    return edges[node];
+  }
+
+  pdd getNodeCoordinate(int node) {
+    return nodeCoordinate[node];
+  }
+
+  int interestPointId(string name) {
+    if (nameTointerestPointId.find(name) == nameTointerestPointId.end()) {
+      return -1;
+    }
+
+    return nameTointerestPointId[name].first;
   }
 };
 
@@ -163,7 +182,7 @@ pair<int, vector<int>> djikstras(Map &map, int start, int end) {
       return {current.first, reconstructPath(start, end, predecessors)};
     }
 
-    for (pii edge : map.edges[current.second]) {
+    for (pii edge : map.getNieghbors(current.second)) {
       int nextNode = edge.first;
       int newDist = current.first + edge.second;
 
@@ -189,22 +208,24 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
 
   cout << "Finding path from " << startName << " to " << endName << "..." << endl;
 
-  if (map.nameTointerestPointId.find(startName) == map.nameTointerestPointId.end()) {
+  int startNode = map.interestPointId(startName);
+  int endNode = map.interestPointId(endName);
+
+  if (startNode == -1) {
     cout << "Could not find start location: " << startName << endl;
     return;
-  } else if (map.nameTointerestPointId.find(endName) == map.nameTointerestPointId.end()) {
+  } else if (endNode == -1) {
     cout << "Could not find end location: " << endName << endl;
     return;
   }
-
-  int startNode = map.nameTointerestPointId[startName].first;
-  int endNode = map.nameTointerestPointId[endName].first;
 
   auto start_time = chrono::high_resolution_clock::now();
   auto result = djikstras(map, startNode, endNode);
   auto end_time = chrono::high_resolution_clock::now();
 
   int time = result.first;
+  vector<int> shortestPath = result.second;
+
   int seconds = time / 100;
   int minutes = seconds / 60;
   int hours = minutes / 60;
@@ -216,20 +237,22 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
 
   file << "latitude,longitude\n";
 
-  int MAXWAYPOINTS = 100;
-  int step = result.second.size() / MAXWAYPOINTS;
+  const int MAX_WAYPOINTS = 100;
+
+  // Step size, rounds up to nearest integer
+  int step = (shortestPath.size() + MAX_WAYPOINTS - 1) / MAX_WAYPOINTS;
+
   if (step == 0) {
     step = 1;
   }
-  for (size_t i = 0; i < result.second.size(); i += step) {
-    int node = result.second[i];
-    file << map.nodes[node].first << "," << map.nodes[node].second << "\n";
-  }
+  for (size_t i = 0; i < shortestPath.size(); i += step) {
+    // Last should be included
+    if (i + step >= shortestPath.size()) {
+      i = shortestPath.size() - 1;
+    }
 
-  // Include the last waypoint if it's not already included
-  if ((result.second.size() - 1) % step != 0) {
-    int node = result.second.back();
-    file << map.nodes[node].first << "," << map.nodes[node].second << "\n";
+    int node = shortestPath[i];
+    file << map.getNodeCoordinate(node).first << "," << map.getNodeCoordinate(node).second << "\n";
   }
 
   file.close();
