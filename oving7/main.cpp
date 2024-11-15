@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <locale>
+#include <map>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -94,18 +96,20 @@ private:
     readInterestPoints();
   }
 
-  vector<string> interestPointCategories(int interestPointNodeId) {
-    string categories[] = {"Stedsnavn", "Bensinstasjon", "Ladestasjon", "Spisested", "Drikkested", "Overnattingssted"};
+  bool interestPointHasCategory(int interestPointNodeId, string category) {
+    map<string, int> categoryCode = {
+        {"Stedsnavn", 1},
+        {"Bensinstasjon", 2},
+        {"Ladestasjon", 4},
+        {"Spisested", 8},
+        {"Drikkested", 16},
+        {"Overnattingssted", 32}};
 
-    vector<string> interestPointCategories;
-
-    for (int i = 0; i < 6; i++) {
-      if (interestPoints[interestPointNodeId].first & (1 << i)) {
-        interestPointCategories.push_back(interestPointCategories[i]);
-      }
+    if (categoryCode.find(category) == categoryCode.end()) {
+      return false;
     }
 
-    return interestPointCategories;
+    return interestPoints[interestPointNodeId].first & categoryCode[category];
   }
 
 public:
