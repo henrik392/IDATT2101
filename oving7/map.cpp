@@ -59,7 +59,10 @@ void Map::readInterestPoints() {
     file >> ws;
 
     getline(file, tmp, '"');
-    getline(file, name, '"');
+    getline(file, name);
+
+    // delete last character (")
+    name.pop_back();
 
     interestPoints[node] = {interest, name};
     nameTointerestPointId[name] = {node, interest};
