@@ -1,4 +1,4 @@
-#include "dijkstras.h"
+#include "dijkstra.h"
 #include "map.h"
 #include "util.h"
 #include <algorithm>
@@ -58,7 +58,7 @@ private:
       }
 
       cout << "Calculating distances for " << landmarks[i] << "..." << endl;
-      dijkstras(map, node, -1, distMatrix[i]);
+      dijkstra(map, node, -1, distMatrix[i]);
     }
   }
 

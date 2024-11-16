@@ -1,4 +1,4 @@
-#include "dijkstras.h"
+#include "dijkstra.h"
 #include "map.h"
 #include "util.h"
 #include <algorithm>
@@ -27,7 +27,7 @@ int main(int argc, char const *argv[]) {
   };
 
   auto start_time = chrono::high_resolution_clock::now();
-  auto result = dijkstras(map, map.interestPointNameToNode(fromLandmark), map.interestPointNameToNode(toLandmark));
+  auto result = dijkstra(map, map.interestPointNameToNode(fromLandmark), map.interestPointNameToNode(toLandmark));
   auto end_time = chrono::high_resolution_clock::now();
 
   int time = result.first;

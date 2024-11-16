@@ -1,4 +1,4 @@
-#include "dijkstras.h"
+#include "dijkstra.h"
 #include "map.h"
 #include "util.h"
 #include <algorithm>
@@ -7,12 +7,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-pair<int, vector<int>> dijkstras(Map &map, int start, int end) {
+pair<int, vector<int>> dijkstra(Map &map, int start, int end) {
   vector<int> distances;
-  return dijkstras(map, start, end, distances);
+  return dijkstra(map, start, end, distances);
 }
 
-pair<int, vector<int>> dijkstras(Map &map, int start, int end, vector<int> &distances) {
+pair<int, vector<int>> dijkstra(Map &map, int start, int end, vector<int> &distances) {
   unordered_map<int, int> predecessors;
   unordered_set<int> visited;
 
