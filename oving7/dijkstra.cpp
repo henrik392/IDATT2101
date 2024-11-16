@@ -54,3 +54,39 @@ pair<int, vector<int>> dijkstra(Map &map, int start, int end, vector<int> &dista
 
   return {-1, {}};
 }
+
+vector<int> closestLandmarks(Map &map, int node, string category, const int numLandmarks) {
+  vector<int> landmarks;
+  int foundLandmarks = 0;
+
+  unordered_set<int> visited;
+
+  priority_queue<pii, vector<pii>, greater<pii>> pq;
+  pq.push({0, node});
+
+  while (!pq.empty() && foundLandmarks < numLandmarks) {
+    pii current = pq.top(); // {time, node}
+    pq.pop();
+
+    if (visited.find(current.second) != visited.end()) {
+      continue;
+    }
+
+    visited.insert(current.second);
+
+    if (current.second != node && map.interestPointHasCategory(current.second, category)) {
+      landmarks.push_back(current.second);
+      foundLandmarks++;
+    }
+
+    for (pii edge : map.getNieghbors(current.second)) {
+      int nextNode = edge.first;
+      int newDist = current.first + edge.second;
+
+      if (visited.find(nextNode) == visited.end()) {
+        pq.push({newDist, nextNode});
+      }
+    }
+  }
+  return landmarks;
+}

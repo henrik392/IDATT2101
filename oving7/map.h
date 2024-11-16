@@ -36,7 +36,6 @@ private:
   void readEdges();
   void readInterestPoints();
   void readMap();
-  bool interestPointHasCategory(int interestPointNodeId, string category);
 
 public:
   Map(string nodesFile, string edgesFile, string interestPointsFile);
@@ -44,5 +43,6 @@ public:
   vector<pii> &getNieghbors(int node);
   pdd getNodeCoordinate(int node);
   int interestPointNameToNode(string name);
+  bool interestPointHasCategory(int interestPointNodeId, string category);
   size_t getSize();
 };
