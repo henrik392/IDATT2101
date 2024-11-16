@@ -10,146 +10,14 @@
 #include <unordered_set>
 #include <vector>
 
+#include "map.h"
+
 using namespace std;
 
 #define pii pair<int, int>
 #define pdd pair<double, double>
 
-class Map;
 pair<int, vector<int>> djikstras(Map &map, int start, int end, vector<int> &distances);
-
-class Map {
-private:
-  string nodesFile, edgesFile, interestPointsFile;
-  unordered_map<int, pair<int, string>> interestPoints; // node_id -> interest_id + name
-  unordered_map<string, pii> nameTointerestPointId;     // name -> id + interest
-  vector<vector<pii>> inverseEdges;
-  vector<vector<pii>> edges;
-  vector<pdd> nodeCoordinate;
-  int n, m, k;
-
-  const map<string, int> categoryCode = {
-      {"Stedsnavn", 1},
-      {"Bensinstasjon", 2},
-      {"Ladestasjon", 4},
-      {"Spisested", 8},
-      {"Drikkested", 16},
-      {"Overnattingssted", 32}};
-
-  void readNodes() {
-    std::locale::global(std::locale::classic());
-    ifstream file(nodesFile);
-    if (!file) {
-      cout << "Error opening file: " << nodesFile << endl;
-      return;
-    }
-
-    file >> n;
-
-    nodeCoordinate.resize(n);
-    edges.resize(n);
-    inverseEdges.resize(n);
-
-    for (int i = 0; i < n; i++) {
-      int id;
-      double latitude, longitude;
-      file >> id >> latitude >> longitude;
-      nodeCoordinate[i] = {latitude, longitude};
-      // cout << "Node: " << i << " Latitude: " << latitude << " Longitude: " << longitude << endl;
-    }
-
-    file.close();
-  }
-
-  void readEdges() {
-    ifstream file(edgesFile);
-    if (!file) {
-      cout << "Error opening file: " << edgesFile << endl;
-      return;
-    }
-
-    file >> m;
-
-    for (int i = 0; i < m; i++) {
-      // Tid i hundredels sekund
-      int from, to, time, length, speedLimit;
-      file >> from >> to >> time >> length >> speedLimit;
-      edges[from].push_back({to, time});
-      inverseEdges[to].push_back({from, time});
-    }
-
-    file.close();
-  }
-
-  void readInterestPoints() {
-    ifstream file(interestPointsFile);
-    if (!file) {
-      cout << "Error opening file: " << interestPointsFile << endl;
-      return;
-    }
-
-    file >> k;
-    for (int i = 0; i < k; i++) {
-      int node, interest;
-      string name, tmp;
-
-      file >> node >> interest;
-      file >> ws; // Ignore any leading whitespace
-
-      // Read the quote and the name
-      getline(file, tmp, '"');  // Read up to the first quote
-      getline(file, name, '"'); // Read the name inside quotes
-
-      interestPoints[node] = {interest, name};
-      nameTointerestPointId[name] = {node, interest};
-    }
-
-    file.close();
-  }
-
-  void readMap() {
-    readNodes();
-    readEdges();
-    readInterestPoints();
-  }
-
-  bool interestPointHasCategory(int interestPointNodeId, string category) {
-    if (categoryCode.find(category) == categoryCode.end()) {
-      return false;
-    }
-
-    return interestPoints[interestPointNodeId].first & categoryCode.at(category);
-  }
-
-public:
-  Map(string nodesFile, string edgesFile, string interestPointsFile) : nodesFile(nodesFile), edgesFile(edgesFile), interestPointsFile(interestPointsFile) {
-    readMap();
-  }
-
-  void reverse() {
-    swap(edges, inverseEdges);
-  }
-
-  vector<pii> &getNieghbors(int node) {
-    return edges[node];
-  }
-
-  pdd getNodeCoordinate(int node) {
-    return nodeCoordinate[node];
-  }
-
-  int interestPointNameToNode(string name) {
-    if (nameTointerestPointId.find(name) == nameTointerestPointId.end()) {
-      return -1;
-    }
-
-    return nameTointerestPointId[name].first;
-  }
-
-  size_t getSize() {
-    return n;
-  }
-};
 
 class ALTHelper {
 private:
@@ -233,6 +101,21 @@ public:
     preprocessAlt(toLandmarkFile, toLandmark);
     map.reverse();
   }
+
+  int estimateDistance(int node, int target) {
+    int estimate = 0;
+    for (size_t i = 0; i < landmarks.size(); i++) {
+      int landmarkToNode = fromLandmark[i][node];
+      int landmarkToTarget = fromLandmark[i][target];
+      estimate = max(estimate, landmarkToTarget - landmarkToNode);
+
+      int nodeToLandmark = toLandmark[i][node];
+      int targetToLandmark = toLandmark[i][target];
+      estimate = max(estimate, nodeToLandmark - targetToLandmark);
+    }
+
+    return estimate;
+  }
 };
 
 vector<int> reconstructPath(int start, int end, unordered_map<int, int> &predecessors) {
@@ -296,27 +179,56 @@ pair<int, vector<int>> djikstras(Map &map, int start, int end, vector<int> &dist
   return {-1, {}};
 }
 
-// struct Candidate {
-//   int node, time, heuristic;
-//   bool operator>(const Candidate &other) const {
-//     return time + heuristic > other.time + other.heuristic;
-//   }
-// };
+struct Candidate {
+  int node, time, heuristic;
+  bool operator>(const Candidate &other) const {
+    return time + heuristic > other.time + other.heuristic;
+  }
+};
 
-// int heuristic(Map map, ALTHelper altHelper, int current, int end) {
-// }
+pair<int, vector<int>> ALT(Map &map, ALTHelper altHelper, int start, int end) {
+  unordered_map<int, int> predecessors;
+  unordered_set<int> visited;
 
-// pair<int, vector<int>> ALT(Map &map, int start, int end) {
-//   unordered_map<int, int> predecessors;
-//   unordered_set<int> visited;
+  priority_queue<Candidate, vector<Candidate>, greater<Candidate>> pq;
 
-//   priority_queue<pii, vector<pii>, greater<pii>> pq;
-//   pq.push({0, start});
-// }
+  int initialHeuristic = altHelper.estimateDistance(start, end);
+  pq.push({start, 0, initialHeuristic});
 
-// vector<string> LANDMARKS = {"Kristiansand", "Stavanger", "Bergen", "Trondheim", "Tromsø", "Oslo"};
+  int nodesVisitedTotal = 0;
+  while (!pq.empty()) {
+    Candidate current = pq.top();
+    pq.pop();
 
-void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string endName, string outputFileName) {
+    if (visited.find(current.node) != visited.end()) {
+      continue;
+    }
+
+    visited.insert(current.node);
+
+    if (current.node == end) {
+      cout << "Number of nodes visited: " << nodesVisitedTotal << endl;
+      return {current.time, reconstructPath(start, end, predecessors)};
+    }
+
+    for (pii edge : map.getNieghbors(current.node)) {
+      int nextNode = edge.first;
+      int newDist = current.time + edge.second;
+
+      if (visited.find(nextNode) == visited.end()) {
+        int heuristic = altHelper.estimateDistance(nextNode, end);
+        pq.push({nextNode, newDist, heuristic});
+        predecessors[nextNode] = current.node; // Update predecessor
+      }
+    }
+
+    nodesVisitedTotal++;
+  }
+
+  return {-1, {}};
+}
+
+void writeCoordintePathFromLandmarksToFile(Map &map, ALTHelper altHelper, string startName, string endName, string outputFileName) {
   ofstream file(outputFileName);
   if (!file) {
     cout << "Error opening file: "
@@ -338,7 +250,8 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
   }
 
   auto start_time = chrono::high_resolution_clock::now();
-  auto result = djikstras(map, startNode, endNode);
+  // auto result = djikstras(map, startNode, endNode);
+  auto result = ALT(map, altHelper, startNode, endNode);
   auto end_time = chrono::high_resolution_clock::now();
 
   int time = result.first;
@@ -378,14 +291,41 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
   cout << "Done writing to file." << endl;
 }
 
-int main() {
+vector<string> readLandmarksFromFile(string filename) {
+  ifstream file(filename);
+  if (!file) {
+    cout << "Error opening file: " << filename << endl;
+    return {};
+  }
+
+  vector<string> landmarks;
+  string landmark;
+  while (getline(file, landmark)) {
+    landmarks.push_back(landmark);
+  }
+
+  file.close();
+  return landmarks;
+}
+
+int main(int argc, char const *argv[]) {
+  if (argc != 4) {
+    cout << "Usage: " << argv[0] << " <path_to_map_folder> <from_landmark> <to_landmark>" << endl;
+    cout << "Example 1: " << argv[0] << " data/island \"Alda Hotel Reykjavik\" \"Höfn\"" << endl;
+    cout << "Example 2: " << argv[0] << " data/norden \"Trondheim\" \"Oslo\"" << endl;
+    return 1;
+  }
+
+  string pathToMap = argv[1];
+  string fromLandmark = argv[2];
+  string toLandmark = argv[3];
+
   cout << "Reading map file..." << endl;
-  string pathToMap = "oving7/data/island";
   Map map(pathToMap + "/noder.txt", pathToMap + "/kanter.txt", pathToMap + "/interessepkt.txt");
   cout << "Done reading map file." << endl;
 
   cout << "Creating ALT helper..." << endl;
-  vector<string> landmarks({"Alda Hotel Reykjavik", "Höfn"});
+  vector<string> landmarks = readLandmarksFromFile(pathToMap + "/landmarks.txt");
   ALTHelper altHelper(map, pathToMap + "/fromLandmark.txt", pathToMap + "/toLandmark.txt", landmarks);
   cout << "Done creating ALT helper." << endl;
 
@@ -395,7 +335,7 @@ int main() {
 
   // Island:
   // tid: 5:12:28
-  writeCoordintePathFromLandmarksToFile(map, "Alda Hotel Reykjavik", "Höfn", "oving7/data/route2.csv");
+  writeCoordintePathFromLandmarksToFile(map, altHelper, fromLandmark, toLandmark, pathToMap + "/route.csv");
 
   return 0;
 }
