@@ -74,7 +74,7 @@ vector<int> closestLandmarks(Map &map, int node, string category, const int numL
 
     visited.insert(current.second);
 
-    if (current.second != node && map.interestPointHasCategory(current.second, category)) {
+    if (map.interestPointHasCategory(current.second, category)) {
       landmarks.push_back(current.second);
       foundLandmarks++;
     }

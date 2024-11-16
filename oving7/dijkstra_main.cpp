@@ -33,7 +33,7 @@ int main(int argc, char const *argv[]) {
   int time = result.first;
   vector<int> shortestPath = result.second;
 
-  writeCoordintesToFile(shortestPath, map, pathToMap + "/path.csv");
+  writeNodeCoordintesToFile(shortestPath, map, pathToMap + "/path.csv");
 
   displayResults(start_time, end_time, time, fromLandmark, toLandmark);
 

@@ -74,11 +74,13 @@ void Map::readMap() {
   readInterestPoints();
 }
 
-bool Map::interestPointHasCategory(int interestPointNodeId, string category) {
+bool Map::interestPointHasCategory(int interestPointNode, string category) {
   if (categoryCode.find(category) == categoryCode.end()) {
+    cout << "Category not found: " << category << endl;
     return false;
   }
-  return interestPoints[interestPointNodeId].first & categoryCode.at(category);
+
+  return interestPoints.count(interestPointNode) && (interestPoints.at(interestPointNode).first & categoryCode.at(category));
 }
 
 Map::Map(string nodesFile, string edgesFile, string interestPointsFile)

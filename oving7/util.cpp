@@ -21,7 +21,7 @@ vector<int> reconstructPath(int start, int end, unordered_map<int, int> &predece
   return path;
 }
 
-void writeCoordintesToFile(vector<int> shortestPath, Map &map, string outputFileName, int maxWaypoints) {
+void writeNodeCoordintesToFile(vector<int> shortestPath, Map &map, string outputFileName, int maxWaypoints) {
   ofstream file(outputFileName);
   if (!file) {
     cout << "Error opening file: " << outputFileName << endl;
@@ -72,4 +72,22 @@ bool validateLandmarks(Map &map, string fromLandmark, string toLandmark) {
   }
 
   return true;
+}
+
+bool validateLandmark(Map &map, string landmark) {
+  if (map.interestPointNameToNode(landmark) == -1) {
+    cout << "Could not find location: " << landmark << endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool validateNode(Map &map, int node) {
+  if (node < 0 || node >= (int)map.getSize()) {
+    cout << "Could not find node: " << node << endl;
+    return false;
+  }
+
+  return false;
 }
