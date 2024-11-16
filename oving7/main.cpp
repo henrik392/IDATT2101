@@ -15,6 +15,9 @@ using namespace std;
 #define pii pair<int, int>
 #define pdd pair<double, double>
 
+class Map;
+pair<int, vector<int>> djikstras(Map &map, int start, int end, vector<int> &distances);
+
 class Map {
 private:
   string nodesFile, edgesFile, interestPointsFile;
@@ -135,12 +138,100 @@ public:
     return nodeCoordinate[node];
   }
 
-  int interestPointId(string name) {
+  int interestPointNameToNode(string name) {
     if (nameTointerestPointId.find(name) == nameTointerestPointId.end()) {
       return -1;
     }
 
     return nameTointerestPointId[name].first;
+  }
+
+  size_t getSize() {
+    return n;
+  }
+};
+
+class ALTHelper {
+private:
+  Map &map;
+  string fromLandmarkFile, toLandmarkFile;
+  vector<string> landmarks;
+  vector<vector<int>> fromLandmark;
+  vector<vector<int>> toLandmark;
+
+  void readAltFile(ifstream &file, vector<vector<int>> &distMatrix) {
+    int n = 0;
+    file >> n;
+    if (n != (int)distMatrix.size()) {
+      cout << "Error reading file. The `landmarks` dimension does not match the file." << endl;
+      return;
+    }
+
+    for (size_t i = 0; i < distMatrix.size(); i++) {
+      for (size_t j = 0; j < map.getSize(); j++) {
+        file >> distMatrix[i][j];
+      }
+    }
+
+    file.close();
+  }
+
+  void writeAltFile(ofstream &file, vector<vector<int>> &distMatrix) {
+    file << distMatrix.size() << endl;
+    for (size_t i = 0; i < distMatrix.size(); i++) {
+      for (size_t j = 0; j < distMatrix[i].size(); j++) {
+        file << distMatrix[i][j] << " ";
+      }
+      file << endl;
+    }
+  }
+
+  void calculateLandmarkDistances(vector<vector<int>> &distMatrix) {
+    for (size_t i = 0; i < landmarks.size(); i++) {
+      int node = map.interestPointNameToNode(landmarks[i]);
+      if (node == -1) {
+        cout << "Could not find node for landmark: " << landmarks[i] << endl;
+        continue;
+      }
+
+      cout << "Calculating distances for " << landmarks[i] << "..." << endl;
+      djikstras(map, node, -1, distMatrix[i]);
+    }
+  }
+
+  void preprocessAlt(string landmarkFile, vector<vector<int>> &distMatrix) {
+    ifstream file(landmarkFile);
+    if (!file) {
+      cout << "Could not find: " << landmarkFile << endl;
+      cout << "Creating new file..." << endl;
+      ofstream newFile(landmarkFile);
+      if (!newFile) {
+        cout << "Error creating file: " << landmarkFile << endl;
+        return;
+      }
+
+      calculateLandmarkDistances(distMatrix);
+      writeAltFile(newFile, distMatrix);
+      return;
+    }
+
+    readAltFile(file, distMatrix);
+
+    file.close();
+  }
+
+public:
+  ALTHelper(Map &map, string fromLandmarkFile, string toLandmarkFile, vector<string> landmarks) : map(map), fromLandmarkFile(fromLandmarkFile), toLandmarkFile(toLandmarkFile), landmarks(landmarks) {
+    fromLandmark.resize(landmarks.size(), vector<int>(map.getSize(), INT_MAX));
+    toLandmark.resize(landmarks.size(), vector<int>(map.getSize(), INT_MAX));
+
+    cout << "Preprocessing distances from landmarks." << endl;
+    preprocessAlt(fromLandmarkFile, fromLandmark);
+    map.reverse();
+
+    cout << "Preprocessing distances to landmarks." << endl;
+    preprocessAlt(toLandmarkFile, toLandmark);
+    map.reverse();
   }
 };
 
@@ -158,6 +249,11 @@ vector<int> reconstructPath(int start, int end, unordered_map<int, int> &predece
 }
 
 pair<int, vector<int>> djikstras(Map &map, int start, int end) {
+  vector<int> distances;
+  return djikstras(map, start, end, distances);
+}
+
+pair<int, vector<int>> djikstras(Map &map, int start, int end, vector<int> &distances) {
   unordered_map<int, int> predecessors;
   unordered_set<int> visited;
 
@@ -176,6 +272,10 @@ pair<int, vector<int>> djikstras(Map &map, int start, int end) {
     }
 
     visited.insert(current.second);
+
+    if (end == -1) {
+      distances[current.second] = current.first;
+    }
 
     if (current.second == end) {
       cout << "Number of nodes visited: " << count << endl;
@@ -196,6 +296,24 @@ pair<int, vector<int>> djikstras(Map &map, int start, int end) {
   return {-1, {}};
 }
 
+// struct Candidate {
+//   int node, time, heuristic;
+//   bool operator>(const Candidate &other) const {
+//     return time + heuristic > other.time + other.heuristic;
+//   }
+// };
+
+// int heuristic(Map map, ALTHelper altHelper, int current, int end) {
+// }
+
+// pair<int, vector<int>> ALT(Map &map, int start, int end) {
+//   unordered_map<int, int> predecessors;
+//   unordered_set<int> visited;
+
+//   priority_queue<pii, vector<pii>, greater<pii>> pq;
+//   pq.push({0, start});
+// }
+
 // vector<string> LANDMARKS = {"Kristiansand", "Stavanger", "Bergen", "Trondheim", "Tromsø", "Oslo"};
 
 void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string endName, string outputFileName) {
@@ -208,8 +326,8 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
 
   cout << "Finding path from " << startName << " to " << endName << "..." << endl;
 
-  int startNode = map.interestPointId(startName);
-  int endNode = map.interestPointId(endName);
+  int startNode = map.interestPointNameToNode(startName);
+  int endNode = map.interestPointNameToNode(endName);
 
   if (startNode == -1) {
     cout << "Could not find start location: " << startName << endl;
@@ -261,10 +379,15 @@ void writeCoordintePathFromLandmarksToFile(Map &map, string startName, string en
 }
 
 int main() {
-  cout << "Reading file..." << endl;
+  cout << "Reading map file..." << endl;
   string pathToMap = "oving7/data/island";
   Map map(pathToMap + "/noder.txt", pathToMap + "/kanter.txt", pathToMap + "/interessepkt.txt");
-  cout << "Done reading file." << endl;
+  cout << "Done reading map file." << endl;
+
+  cout << "Creating ALT helper..." << endl;
+  vector<string> landmarks({"Alda Hotel Reykjavik", "Höfn"});
+  ALTHelper altHelper(map, pathToMap + "/fromLandmark.txt", pathToMap + "/toLandmark.txt", landmarks);
+  cout << "Done creating ALT helper." << endl;
 
   // Norden:
   // fra: 7826348 | til: 2948202 | noder i veien: 1981 | tid: 5:53:13
