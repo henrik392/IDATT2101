@@ -1,5 +1,4 @@
-#ifndef MAP_H
-#define MAP_H
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -47,5 +46,3 @@ public:
   int interestPointNameToNode(string name);
   size_t getSize();
 };
-
-#endif
